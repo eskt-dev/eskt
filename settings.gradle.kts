@@ -12,3 +12,6 @@ pluginManagement {
 }
 
 rootProject.name = "eskt-parent"
+
+include(":event-store:api")
+include(":event-store:memory")
