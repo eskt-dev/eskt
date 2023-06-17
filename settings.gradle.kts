@@ -7,7 +7,7 @@ dependencyResolutionManagement {
 
 pluginManagement {
     plugins {
-        kotlin("multiplatform") version "1.8.21"
+
     }
 }
 
