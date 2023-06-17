@@ -1,4 +1,4 @@
-package dev.eskt
+package dev.eskt.store
 
 sealed interface AppendResult {
     data class Appended(val currentVersion: Int) : AppendResult

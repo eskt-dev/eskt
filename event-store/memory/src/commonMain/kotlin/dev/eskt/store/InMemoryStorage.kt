@@ -1,4 +1,4 @@
-package dev.eskt
+package dev.eskt.store
 
 @Suppress("UNCHECKED_CAST")
 internal class InMemoryStorage {

@@ -1,4 +1,7 @@
-package dev.eskt
+package dev.eskt.store
+
+import dev.eskt.store.AppendResult
+import dev.eskt.store.StreamTypeHandler
 
 class InMemoryStreamTypeHandler<I, E> internal constructor(
     private val storage: InMemoryStorage,

@@ -1,8 +1,8 @@
-package dev.eskt
+package dev.eskt.store
 
-import dev.eskt.wellknown.car.CarProducedEvent
-import dev.eskt.wellknown.car.CarSoldEvent
-import dev.eskt.wellknown.car.CarStreamType
+import dev.eskt.store.wellknown.car.CarProducedEvent
+import dev.eskt.store.wellknown.car.CarSoldEvent
+import dev.eskt.store.wellknown.car.CarStreamType
 import kotlin.js.JsName
 import kotlin.test.Test
 import kotlin.test.assertEquals

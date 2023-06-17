@@ -1,4 +1,4 @@
-package dev.eskt.wellknown.car
+package dev.eskt.store.wellknown.car
 
 internal sealed interface CarEvent
 
