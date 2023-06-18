@@ -2,23 +2,27 @@ package dev.eskt.store
 
 import kotlin.jvm.JvmInline
 
-sealed interface Result<out R, out F : Exception> {
+public sealed interface Result<out R, out F : Exception> {
     @JvmInline
-    value class Ok<out R>(val result: R) : Result<R, Nothing>
+    public value class Ok<out R>(
+        public val result: R,
+    ) : Result<R, Nothing>
 
     @JvmInline
-    value class Failure<out F : Exception>(val reason: F) : Result<Nothing, F>
+    public value class Failure<out F : Exception>(
+        public val reason: F,
+    ) : Result<Nothing, F>
 
-    fun unwrap(): R = when (this) {
+    public fun unwrap(): R = when (this) {
         is Ok -> result
         is Failure -> throw reason
     }
 
-    open class FailureException : RuntimeException()
+    public open class FailureException : RuntimeException()
 }
 
-sealed class AppendFailure : Result.FailureException() {
-    data class ExpectedVersionMismatch(val currentVersion: Int, val expectedVersion: Int) : AppendFailure()
+public sealed class AppendFailure : Result.FailureException() {
+    public data class ExpectedVersionMismatch(val currentVersion: Int, val expectedVersion: Int) : AppendFailure()
 }
 
-sealed class LoadFailure : Result.FailureException()
+public sealed class LoadFailure : Result.FailureException()

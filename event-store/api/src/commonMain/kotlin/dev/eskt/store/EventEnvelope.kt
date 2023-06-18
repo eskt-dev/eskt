@@ -1,6 +1,6 @@
 package dev.eskt.store
 
-data class EventEnvelope<I, out E>(
+public data class EventEnvelope<I, out E>(
     val streamType: StreamType<I, @UnsafeVariance E>,
     val streamId: I,
     val version: Int,

@@ -5,6 +5,10 @@ plugins {
     id("com.diffplug.spotless")
 }
 
+kotlin {
+    explicitApi()
+}
+
 spotless {
     kotlin {
         target("**/src/**/*.kt")

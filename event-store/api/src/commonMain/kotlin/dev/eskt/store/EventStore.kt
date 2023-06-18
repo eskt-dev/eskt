@@ -1,5 +1,5 @@
 package dev.eskt.store
 
-interface EventStore {
-    fun <I, E> withStreamType(type: StreamType<I, E>): StreamTypeHandler<I, E>
+public interface EventStore {
+    public fun <I, E> withStreamType(type: StreamType<I, E>): StreamTypeHandler<I, E>
 }

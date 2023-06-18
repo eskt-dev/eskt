@@ -1,3 +1,3 @@
 package dev.eskt.store
 
-typealias EventMetadata = Map<String, Any>
+public typealias EventMetadata = Map<String, Any>

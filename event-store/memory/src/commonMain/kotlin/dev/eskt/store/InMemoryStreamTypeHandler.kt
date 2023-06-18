@@ -1,7 +1,7 @@
 package dev.eskt.store
 
-class InMemoryStreamTypeHandler<I, E> internal constructor(
-    val streamType: StreamType<I, E>,
+public class InMemoryStreamTypeHandler<I, E> internal constructor(
+    public val streamType: StreamType<I, E>,
     private val storage: InMemoryStorage,
 ) : StreamTypeHandler<I, E> {
     override fun loadStream(streamId: I, sinceVersion: Int): Result<List<EventEnvelope<I, E>>, LoadFailure> {
