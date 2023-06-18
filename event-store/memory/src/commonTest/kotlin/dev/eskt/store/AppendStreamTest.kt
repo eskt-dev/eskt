@@ -16,15 +16,17 @@ internal class AppendStreamTest {
 
         // when
         val eventStore = InMemoryEventStore(storage)
-        val carHandler = eventStore.withStreamType(CarStreamType)
         val event1 = CarProducedEvent(vin = "123", producer = 1, make = "kia", model = "rio")
-        carHandler.appendStream(
-            streamId = "car-123",
-            expectedVersion = 0,
-            events = listOf(
-                event1,
-            ),
-        )
+        eventStore
+            .withStreamType(CarStreamType)
+            .appendStream(
+                streamId = "car-123",
+                expectedVersion = 0,
+                events = listOf(
+                    event1,
+                ),
+            )
+            .unwrap()
 
         // then
         assertEquals(event1, storage.events[0])
@@ -51,6 +53,7 @@ internal class AppendStreamTest {
                     event1,
                 ),
             )
+            .unwrap()
 
         // then
         assertEquals(event1, storage.events[2])
@@ -78,6 +81,7 @@ internal class AppendStreamTest {
             )
 
         // then
-        assertEquals(AppendResult.ExpectedVersionMismatch(currentVersion = 1, expectedVersion = 2), result)
+        val expected = Result.Failure(AppendFailure.ExpectedVersionMismatch(currentVersion = 1, expectedVersion = 2))
+        assertEquals(expected, result)
     }
 }
