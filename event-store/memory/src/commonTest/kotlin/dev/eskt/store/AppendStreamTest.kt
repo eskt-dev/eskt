@@ -62,6 +62,32 @@ internal class AppendStreamTest {
 
     @Test
     @JsName("test3")
+    fun `given 1 event from same stream - when appending event with already existing version - append is rejected`() {
+        // given
+        val storage = InMemoryStorage()
+        storage.add(CarStreamType, "car-123", CarProducedEvent(vin = "123", producer = 1, make = "kia", model = "rio"))
+        storage.add(CarStreamType, "car-123", CarSoldEvent(seller = 1, buyer = 2, 2500.00f))
+
+        // when
+        val event1 = CarSoldEvent(seller = 1, buyer = 3, 2500.00f)
+        val eventStore = InMemoryEventStore(storage)
+        val result = eventStore
+            .withStreamType(CarStreamType)
+            .appendStream(
+                streamId = "car-123",
+                expectedVersion = 1,
+                events = listOf(
+                    event1,
+                ),
+            )
+
+        // then
+        val expected = Result.Failure(AppendFailure.ExpectedVersionMismatch(currentVersion = 2, expectedVersion = 1))
+        assertEquals(expected, result)
+    }
+
+    @Test
+    @JsName("test4")
     fun `given 1 event from same stream - when appending event out of order - append is rejected`() {
         // given
         val storage = InMemoryStorage()
