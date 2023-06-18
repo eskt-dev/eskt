@@ -1,6 +1,8 @@
 package dev.eskt.store
 
 public interface StreamTypeHandler<I, E> {
+    public val streamType: StreamType<I, E>
+
     public fun loadStream(
         streamId: I,
         sinceVersion: Int = 0,
