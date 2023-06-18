@@ -1,6 +1,11 @@
 package dev.eskt.store
 
 interface StreamTypeHandler<I, E> {
+    fun loadStream(
+        streamId: I,
+        sinceVersion: Int = 0,
+    ): Result<List<EventEnvelope<I, E>>, LoadFailure>
+
     /**
      * Append new events into an event stream.
      *
@@ -8,5 +13,9 @@ interface StreamTypeHandler<I, E> {
      * 1. The version of the aggregate after those events are appended, or;
      * 1. An [AppendFailure] with the specific failure that prevented the new events to be appended.
      */
-    fun appendStream(streamId: I, expectedVersion: Int, events: List<E>): Result<Int, AppendFailure>
+    fun appendStream(
+        streamId: I,
+        expectedVersion: Int,
+        events: List<E>,
+    ): Result<Int, AppendFailure>
 }

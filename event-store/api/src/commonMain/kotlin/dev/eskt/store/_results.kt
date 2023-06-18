@@ -20,3 +20,5 @@ sealed interface Result<out R, out F : Exception> {
 sealed class AppendFailure : Result.FailureException() {
     data class ExpectedVersionMismatch(val currentVersion: Int, val expectedVersion: Int) : AppendFailure()
 }
+
+sealed class LoadFailure : Result.FailureException()

@@ -6,6 +6,6 @@ class InMemoryEventStore internal constructor(
     constructor() : this(InMemoryStorage())
 
     override fun <I, E> withStreamType(type: StreamType<I, E>): StreamTypeHandler<I, E> {
-        return InMemoryStreamTypeHandler(storage)
+        return InMemoryStreamTypeHandler(type, storage)
     }
 }

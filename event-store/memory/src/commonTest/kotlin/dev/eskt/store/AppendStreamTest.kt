@@ -29,7 +29,7 @@ internal class AppendStreamTest {
             .unwrap()
 
         // then
-        assertEquals(event1, storage.events[0])
+        assertEquals(event1, storage.events[0].event)
         assertEquals(event1, storage.eventsByStreamId["car-123"]!![0])
     }
 
@@ -38,8 +38,8 @@ internal class AppendStreamTest {
     fun `given 2 event from different streams - when appending events on a stream - event is added`() {
         // given
         val storage = InMemoryStorage()
-        storage.add("car-123", CarProducedEvent(vin = "123", producer = 1, make = "kia", model = "rio"))
-        storage.add("car-456", CarProducedEvent(vin = "456", producer = 1, make = "kia", model = "rio"))
+        storage.add(CarStreamType, "car-123", CarProducedEvent(vin = "123", producer = 1, make = "kia", model = "rio"))
+        storage.add(CarStreamType, "car-456", CarProducedEvent(vin = "456", producer = 1, make = "kia", model = "rio"))
 
         // when
         val event1 = CarSoldEvent(seller = 1, buyer = 2, 2500.00f)
@@ -56,7 +56,7 @@ internal class AppendStreamTest {
             .unwrap()
 
         // then
-        assertEquals(event1, storage.events[2])
+        assertEquals(event1, storage.events[2].event)
         assertEquals(event1, storage.eventsByStreamId["car-123"]!![1])
     }
 
@@ -65,7 +65,7 @@ internal class AppendStreamTest {
     fun `given 1 event from same stream - when appending event out of order - append is rejected`() {
         // given
         val storage = InMemoryStorage()
-        storage.add("car-123", CarProducedEvent(vin = "123", producer = 1, make = "kia", model = "rio"))
+        storage.add(CarStreamType, "car-123", CarProducedEvent(vin = "123", producer = 1, make = "kia", model = "rio"))
 
         // when
         val event1 = CarSoldEvent(seller = 1, buyer = 2, 2500.00f)
