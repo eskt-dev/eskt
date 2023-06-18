@@ -21,3 +21,5 @@ kotlin {
         }
     }
 }
+
+setupPublishing("event-store-memory")

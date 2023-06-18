@@ -17,3 +17,5 @@ kotlin {
         }
     }
 }
+
+setupPublishing("event-store-api")
