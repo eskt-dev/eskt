@@ -16,7 +16,7 @@ public class InMemoryStreamTypeHandler<I, E> internal constructor(
             return Result.Failure(AppendFailure.ExpectedVersionMismatch(streamEvents.size, expectedVersion))
         }
         events.forEach {
-            storage.add(streamType, streamId, it)
+            storage.add(streamType, streamId, expectedVersion + 1, it)
         }
         val versionAfterAppend = storage.instanceEvents<I, E>(streamId).size
         return Result.Ok(versionAfterAppend)

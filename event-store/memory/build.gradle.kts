@@ -11,12 +11,14 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(project(":event-store:api"))
+                api(project(":event-store:api"))
+                implementation(project(":event-store:storage-api"))
             }
         }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
+                implementation(project(":event-store:test-harness"))
             }
         }
     }
