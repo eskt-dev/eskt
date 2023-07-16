@@ -1,5 +1,7 @@
 package dev.eskt.store
 
+import dev.eskt.store.storage.api.ExpectedVersionMismatch
+
 public class InMemoryStreamTypeHandler<I, E> internal constructor(
     override val streamType: StreamType<I, E>,
     private val storage: InMemoryStorage,
@@ -11,14 +13,11 @@ public class InMemoryStreamTypeHandler<I, E> internal constructor(
     }
 
     override fun appendStream(streamId: I, expectedVersion: Int, events: List<E>): Result<Int, AppendFailure> {
-        val streamEvents: List<E> = storage.instanceEvents(streamId)
-        if (streamEvents.size != expectedVersion) {
-            return Result.Failure(AppendFailure.ExpectedVersionMismatch(streamEvents.size, expectedVersion))
+        try {
+            storage.add(streamType, streamId, expectedVersion, events, emptyMap())
+        } catch (e: ExpectedVersionMismatch) {
+            return Result.Failure(AppendFailure.ExpectedVersionMismatch(e.currentVersion, e.expectedVersion))
         }
-        events.forEach {
-            storage.add(streamType, streamId, expectedVersion + 1, it)
-        }
-        val versionAfterAppend = storage.instanceEvents<I, E>(streamId).size
-        return Result.Ok(versionAfterAppend)
+        return Result.Ok(expectedVersion + events.size)
     }
 }

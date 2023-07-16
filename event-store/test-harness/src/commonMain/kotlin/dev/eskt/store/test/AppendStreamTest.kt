@@ -64,8 +64,8 @@ public abstract class AppendStreamTest<R : Storage, S : EventStore>(
             .unwrap()
 
         // then
-//        assertEquals(event1, storage.events[2].event)
-//        assertEquals(event1, storage.eventsByStreamId["car-123"]!![1])
+        assertEquals(event1, storage.getEvent(2).event)
+        assertEquals(event1, storage.getStreamEvent("car-123", 1).event)
     }
 
     @Test

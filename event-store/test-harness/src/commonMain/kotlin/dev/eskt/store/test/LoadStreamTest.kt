@@ -23,7 +23,7 @@ public open class LoadStreamTest<R : Storage, S : EventStore>(
 
         // when
         val eventStore = storeFactory(storage)
-        val events = eventStore
+        val eventEnvelopes = eventStore
             .withStreamType(CarStreamType)
             .loadStream(
                 streamId = "car-123",
@@ -31,7 +31,7 @@ public open class LoadStreamTest<R : Storage, S : EventStore>(
             .unwrap()
 
         // then
-        assertEquals(0, events.size)
+        assertEquals(0, eventEnvelopes.size)
     }
 
     @Test
@@ -47,7 +47,7 @@ public open class LoadStreamTest<R : Storage, S : EventStore>(
         val eventStore = storeFactory(storage)
 
         (0..1).forEach { sinceVersion ->
-            val events = eventStore
+            val eventEnvelopes = eventStore
                 .withStreamType(CarStreamType)
                 .loadStream(
                     streamId = "car-123",
@@ -56,7 +56,7 @@ public open class LoadStreamTest<R : Storage, S : EventStore>(
                 .unwrap()
 
             // then
-            assertEquals(2 - sinceVersion, events.size)
+            assertEquals(2 - sinceVersion, eventEnvelopes.size)
             assertEquals(
                 expected = EventEnvelope(
                     streamType = CarStreamType,
@@ -66,7 +66,7 @@ public open class LoadStreamTest<R : Storage, S : EventStore>(
                     metadata = emptyMap(),
                     event = CarSoldEvent(seller = 1, buyer = 2, 2500.00f),
                 ),
-                actual = events.last(),
+                actual = eventEnvelopes.last(),
             )
         }
     }

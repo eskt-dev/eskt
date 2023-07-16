@@ -13,6 +13,7 @@ kotlin {
             dependencies {
                 api(project(":event-store:api"))
                 implementation(project(":event-store:storage-api"))
+                implementation(libs.kotlinx.atomicfu)
             }
         }
         val commonTest by getting {
