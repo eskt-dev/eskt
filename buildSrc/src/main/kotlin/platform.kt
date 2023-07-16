@@ -16,7 +16,7 @@ fun KotlinMultiplatformExtension.setupPlatforms() {
     }
 
     linuxX64()
-    linuxArm64()
+//    linuxArm64()
     macosX64()
     macosArm64()
 }
