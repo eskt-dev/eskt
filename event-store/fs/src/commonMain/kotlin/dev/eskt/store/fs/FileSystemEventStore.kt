@@ -19,8 +19,6 @@ public class FileSystemEventStore internal constructor(
 
     init {
         InitContext().block()
-        // TODO find a better place to break the dependency cycle here
-        storage.streamTypeFinder = { id -> registeredTypes[id] ?: throw IllegalStateException("Unregistered stream type $id") }
     }
 
     public inner class InitContext {

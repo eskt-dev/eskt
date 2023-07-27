@@ -28,8 +28,6 @@ public class FileSystemStorage internal constructor(
         private const val positionEntrySizeInBytes: Long = (Long.SIZE_BYTES).toLong()
     }
 
-    internal lateinit var streamTypeFinder: (id: String) -> BinarySerializableStreamType<*, *>
-
     private val walPath = basePath / "wal"
     private val posPath = basePath / "pos"
 
@@ -130,7 +128,7 @@ public class FileSystemStorage internal constructor(
                 return buildList {
                     while (!streamSource.exhausted()) {
                         val addr = streamSource.readLong()
-                        val envelope = walHandle.readEventEnvelopeAt<I, E>(addr)
+                        val envelope = walHandle.readEventEnvelopeAt<I, E>(addr, streamTypeFinder = { _ -> streamType })
                         add(envelope)
                     }
                 }
@@ -138,21 +136,20 @@ public class FileSystemStorage internal constructor(
         }
     }
 
-    override fun getEvent(position: Long): EventEnvelope<Any, Any> {
+    override fun <I, E> getEvent(streamType: StreamType<I, E>, position: Long): E {
         if (!fs.exists(posPath)) {
             throw IllegalStateException("Event store is empty, file $posPath does not exist")
         }
 
         return fs.openReadOnly(posPath).use { posHandle ->
             val posSource = posHandle.source((position - 1) * positionEntrySizeInBytes).buffer()
-            val addr = posSource.readLong()
             fs.openReadOnly(walPath).use { walHandle ->
-                walHandle.readEventEnvelopeAt(addr)
+                walHandle.readEventEnvelopeAt<I, E>(posSource.readLong(), streamTypeFinder = { _ -> streamType }).event
             }
         }
     }
 
-    override fun <I, E> getStreamEvent(streamType: StreamType<I, E>, streamId: I, version: Int): EventEnvelope<I, E> {
+    override fun <I, E> getStreamEvent(streamType: StreamType<I, E>, streamId: I, version: Int): E {
         val binarySerializableStreamType = streamType as BinarySerializableStreamType<I, E>
         val streamTypeFolder = basePath / streamType.id.lowercase()
 
@@ -165,15 +162,15 @@ public class FileSystemStorage internal constructor(
 
         return fs.openReadOnly(stream).use { streamHandle ->
             val streamSource = streamHandle.source((version - 1) * streamEntrySizeInBytes).buffer()
-            val addr = streamSource.readLong()
             fs.openReadOnly(walPath).use { walHandle ->
-                walHandle.readEventEnvelopeAt(addr)
+                walHandle.readEventEnvelopeAt<I, E>(streamSource.readLong(), streamTypeFinder = { _ -> streamType }).event
             }
         }
     }
 
     private fun <I, E> FileHandle.readEventEnvelopeAt(
         addr: Long,
+        streamTypeFinder: (typeId: String) -> StreamType<*, *>,
     ): EventEnvelope<I, E> {
         val walBuffer = source(addr).buffer()
         val entrySize = walBuffer.readInt()
