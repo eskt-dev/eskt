@@ -13,5 +13,5 @@ public interface Storage {
 
     public fun getEvent(position: Long): EventEnvelope<Any, Any>
 
-    public fun getStreamEvent(streamId: Any, version: Int): EventEnvelope<Any, Any>
+    public fun <I, E> getStreamEvent(streamType: StreamType<I, E>, streamId: I, version: Int): EventEnvelope<I, E>
 }

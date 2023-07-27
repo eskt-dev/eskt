@@ -37,8 +37,8 @@ public abstract class AppendStreamTest<R : Storage, S : EventStore>(
             .unwrap()
 
         // then
-        assertEquals(event1, storage.getEvent(0).event)
-        assertEquals(event1, storage.getStreamEvent("car-123", 0).event)
+        assertEquals(event1, storage.getEvent(1).event)
+        assertEquals(event1, storage.getStreamEvent(CarStreamType, "car-123", 1).event)
     }
 
     @Test
@@ -64,8 +64,8 @@ public abstract class AppendStreamTest<R : Storage, S : EventStore>(
             .unwrap()
 
         // then
-        assertEquals(event1, storage.getEvent(2).event)
-        assertEquals(event1, storage.getStreamEvent("car-123", 1).event)
+        assertEquals(event1, storage.getEvent(3).event)
+        assertEquals(event1, storage.getStreamEvent(CarStreamType, "car-123", 2).event)
     }
 
     @Test

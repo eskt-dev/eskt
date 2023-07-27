@@ -1,10 +1,16 @@
-package dev.eskt.store
+package dev.eskt.store.fs
 
+import dev.eskt.store.AppendFailure
+import dev.eskt.store.EventEnvelope
+import dev.eskt.store.LoadFailure
+import dev.eskt.store.Result
+import dev.eskt.store.StreamType
+import dev.eskt.store.StreamTypeHandler
 import dev.eskt.store.storage.api.ExpectedVersionMismatch
 
-public class InMemoryStreamTypeHandler<I, E> internal constructor(
+public class FileSystemStreamTypeHandler<I, E> internal constructor(
     override val streamType: StreamType<I, E>,
-    private val storage: InMemoryStorage,
+    private val storage: FileSystemStorage,
 ) : StreamTypeHandler<I, E> {
     override fun loadStream(streamId: I, sinceVersion: Int): Result<List<EventEnvelope<I, E>>, LoadFailure> {
         return Result.Ok(

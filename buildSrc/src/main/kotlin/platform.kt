@@ -16,7 +16,8 @@ fun KotlinMultiplatformExtension.setupPlatforms() {
     }
 
     linuxX64()
-    linuxArm64()
+//    TODO restore after https://github.com/square/okio/pull/1301
+//    linuxArm64()
     macosX64()
     macosArm64()
 }

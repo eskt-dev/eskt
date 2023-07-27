@@ -1,5 +1,6 @@
 plugins {
     standardMultiplatformModule()
+    kotlin("plugin.serialization")
 }
 
 group = "dev.eskt"
@@ -11,6 +12,8 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(":event-store:storage-api"))
+                implementation(libs.kotlinx.serialization.core)
+                implementation(libs.kotlinx.serialization.cbor)
                 implementation(kotlin("test"))
             }
         }
