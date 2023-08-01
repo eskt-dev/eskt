@@ -7,7 +7,6 @@ group = "dev.eskt"
 kotlin {
     setupPlatforms()
 
-    @Suppress("UNUSED_VARIABLE")
     sourceSets {
         val commonMain by getting {
             dependencies {
