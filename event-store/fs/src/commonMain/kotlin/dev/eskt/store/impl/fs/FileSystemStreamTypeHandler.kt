@@ -1,4 +1,4 @@
-package dev.eskt.store.fs
+package dev.eskt.store.impl.fs
 
 import dev.eskt.store.api.AppendFailure
 import dev.eskt.store.api.EventEnvelope

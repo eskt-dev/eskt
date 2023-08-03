@@ -1,9 +1,9 @@
-package dev.eskt.store.fs
+package dev.eskt.store.impl.fs
 
-import dev.eskt.store.test.AppendStreamTest
+import dev.eskt.store.test.LoadStreamTest
 import dev.eskt.store.test.w.car.CarStreamType
 
-internal class FileSystemAppendStreamTest : AppendStreamTest<FileSystemStorage, FileSystemEventStore>(
+internal class FileSystemLoadStreamTest : LoadStreamTest<FileSystemStorage, FileSystemEventStore>(
     { FileSystemStorage(createEmptyTemporaryFolder()) },
     { s ->
         FileSystemEventStore(s) {

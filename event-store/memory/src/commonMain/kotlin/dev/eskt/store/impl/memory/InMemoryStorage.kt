@@ -1,4 +1,4 @@
-package dev.eskt.store.memory
+package dev.eskt.store.impl.memory
 
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata

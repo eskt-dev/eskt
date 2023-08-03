@@ -1,4 +1,4 @@
-package dev.eskt.store.fs
+package dev.eskt.store.impl.fs
 
 import okio.FileSystem
 
