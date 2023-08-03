@@ -1,5 +1,8 @@
-package dev.eskt.store
+package dev.eskt.store.memory
 
+import dev.eskt.store.EventEnvelope
+import dev.eskt.store.EventMetadata
+import dev.eskt.store.StreamType
 import dev.eskt.store.storage.api.ExpectedVersionMismatch
 import dev.eskt.store.storage.api.Storage
 import kotlinx.atomicfu.locks.reentrantLock

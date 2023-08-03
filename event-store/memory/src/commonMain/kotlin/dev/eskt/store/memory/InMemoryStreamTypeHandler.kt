@@ -1,5 +1,11 @@
-package dev.eskt.store
+package dev.eskt.store.memory
 
+import dev.eskt.store.AppendFailure
+import dev.eskt.store.EventEnvelope
+import dev.eskt.store.LoadFailure
+import dev.eskt.store.Result
+import dev.eskt.store.StreamType
+import dev.eskt.store.StreamTypeHandler
 import dev.eskt.store.storage.api.ExpectedVersionMismatch
 
 public class InMemoryStreamTypeHandler<I, E> internal constructor(
