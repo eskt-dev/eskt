@@ -1,4 +1,4 @@
-package dev.eskt.store
+package dev.eskt.store.api
 
 public interface StreamTypeHandler<I, E> {
     public val streamType: StreamType<I, E>

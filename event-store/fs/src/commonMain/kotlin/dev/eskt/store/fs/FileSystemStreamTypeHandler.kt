@@ -1,11 +1,11 @@
 package dev.eskt.store.fs
 
-import dev.eskt.store.AppendFailure
-import dev.eskt.store.EventEnvelope
-import dev.eskt.store.LoadFailure
-import dev.eskt.store.Result
-import dev.eskt.store.StreamType
-import dev.eskt.store.StreamTypeHandler
+import dev.eskt.store.api.AppendFailure
+import dev.eskt.store.api.EventEnvelope
+import dev.eskt.store.api.LoadFailure
+import dev.eskt.store.api.Result
+import dev.eskt.store.api.StreamType
+import dev.eskt.store.api.StreamTypeHandler
 import dev.eskt.store.storage.api.ExpectedVersionMismatch
 
 public class FileSystemStreamTypeHandler<I, E> internal constructor(

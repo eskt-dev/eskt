@@ -1,4 +1,4 @@
-package dev.eskt.store
+package dev.eskt.store.api
 
 public data class EventEnvelope<I, out E>(
     val streamType: StreamType<I, @UnsafeVariance E>,

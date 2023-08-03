@@ -1,7 +1,7 @@
 package dev.eskt.store.test
 
-import dev.eskt.store.EventEnvelope
-import dev.eskt.store.EventStore
+import dev.eskt.store.api.EventEnvelope
+import dev.eskt.store.api.EventStore
 import dev.eskt.store.storage.api.Storage
 import dev.eskt.store.test.w.car.CarProducedEvent
 import dev.eskt.store.test.w.car.CarSoldEvent

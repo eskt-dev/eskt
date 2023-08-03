@@ -1,8 +1,8 @@
 package dev.eskt.store.test
 
-import dev.eskt.store.AppendFailure
-import dev.eskt.store.EventStore
-import dev.eskt.store.Result
+import dev.eskt.store.api.AppendFailure
+import dev.eskt.store.api.EventStore
+import dev.eskt.store.api.Result
 import dev.eskt.store.storage.api.Storage
 import dev.eskt.store.test.w.car.CarProducedEvent
 import dev.eskt.store.test.w.car.CarSoldEvent

@@ -1,4 +1,4 @@
-package dev.eskt.store
+package dev.eskt.store.api
 
 import kotlin.jvm.JvmInline
 

@@ -1,7 +1,7 @@
 package dev.eskt.store.storage.api
 
-import dev.eskt.store.EventMetadata
-import dev.eskt.store.StreamType
+import dev.eskt.store.api.EventMetadata
+import dev.eskt.store.api.StreamType
 
 public interface Storage {
     @Throws(ExpectedVersionMismatch::class)

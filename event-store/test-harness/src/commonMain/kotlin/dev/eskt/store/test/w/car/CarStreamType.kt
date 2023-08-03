@@ -1,8 +1,8 @@
 package dev.eskt.store.test.w.car
 
-import dev.eskt.store.BinarySerializableStreamType
-import dev.eskt.store.Serializer
-import dev.eskt.store.StreamType
+import dev.eskt.store.api.BinarySerializableStreamType
+import dev.eskt.store.api.Serializer
+import dev.eskt.store.api.StreamType
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 

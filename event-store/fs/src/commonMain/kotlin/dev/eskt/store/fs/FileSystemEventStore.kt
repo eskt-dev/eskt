@@ -1,9 +1,9 @@
 package dev.eskt.store.fs
 
-import dev.eskt.store.BinarySerializableStreamType
-import dev.eskt.store.EventStore
-import dev.eskt.store.StreamType
-import dev.eskt.store.StreamTypeHandler
+import dev.eskt.store.api.BinarySerializableStreamType
+import dev.eskt.store.api.EventStore
+import dev.eskt.store.api.StreamType
+import dev.eskt.store.api.StreamTypeHandler
 import okio.Path.Companion.toPath
 
 public class FileSystemEventStore internal constructor(
