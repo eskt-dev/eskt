@@ -1,6 +1,7 @@
 package dev.eskt.store.test
 
 import dev.eskt.store.api.AppendFailure
+import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventStore
 import dev.eskt.store.api.Result
 import dev.eskt.store.storage.api.Storage
@@ -37,8 +38,9 @@ public abstract class AppendStreamTest<R : Storage, S : EventStore>(
             .unwrap()
 
         // then
-        assertEquals(event1, storage.getEvent(CarStreamType, 1))
-        assertEquals(event1, storage.getStreamEvent(CarStreamType, "car-123", 1))
+        val eventEnvelope1 = EventEnvelope(CarStreamType, "car-123", 1, 1, emptyMap(), event1)
+        assertEquals(eventEnvelope1, storage.getEvent(CarStreamType, 1))
+        assertEquals(eventEnvelope1, storage.getStreamEvent(CarStreamType, "car-123", 1))
     }
 
     @Test
@@ -64,8 +66,9 @@ public abstract class AppendStreamTest<R : Storage, S : EventStore>(
             .unwrap()
 
         // then
-        assertEquals(event1, storage.getEvent(CarStreamType, 3))
-        assertEquals(event1, storage.getStreamEvent(CarStreamType, "car-123", 2))
+        val eventEnvelope1 = EventEnvelope(CarStreamType, "car-123", 2, 3, emptyMap(), event1)
+        assertEquals(eventEnvelope1, storage.getEvent(CarStreamType, 3))
+        assertEquals(eventEnvelope1, storage.getStreamEvent(CarStreamType, "car-123", 2))
     }
 
     @Test

@@ -136,7 +136,7 @@ public class FileSystemStorage internal constructor(
         }
     }
 
-    override fun <I, E> getEvent(streamType: StreamType<I, E>, position: Long): E {
+    override fun <I, E> getEvent(streamType: StreamType<I, E>, position: Long): EventEnvelope<I, E> {
         if (!fs.exists(posPath)) {
             throw IllegalStateException("Event store is empty, file $posPath does not exist")
         }
@@ -144,12 +144,12 @@ public class FileSystemStorage internal constructor(
         return fs.openReadOnly(posPath).use { posHandle ->
             val posSource = posHandle.source((position - 1) * positionEntrySizeInBytes).buffer()
             fs.openReadOnly(walPath).use { walHandle ->
-                walHandle.readEventEnvelopeAt<I, E>(posSource.readLong(), streamTypeFinder = { _ -> streamType }).event
+                walHandle.readEventEnvelopeAt(posSource.readLong(), streamTypeFinder = { _ -> streamType })
             }
         }
     }
 
-    override fun <I, E> getStreamEvent(streamType: StreamType<I, E>, streamId: I, version: Int): E {
+    override fun <I, E> getStreamEvent(streamType: StreamType<I, E>, streamId: I, version: Int): EventEnvelope<I, E> {
         val binarySerializableStreamType = streamType as BinarySerializableStreamType<I, E>
         val streamTypeFolder = basePath / streamType.id.lowercase()
 
@@ -163,7 +163,7 @@ public class FileSystemStorage internal constructor(
         return fs.openReadOnly(stream).use { streamHandle ->
             val streamSource = streamHandle.source((version - 1) * streamEntrySizeInBytes).buffer()
             fs.openReadOnly(walPath).use { walHandle ->
-                walHandle.readEventEnvelopeAt<I, E>(streamSource.readLong(), streamTypeFinder = { _ -> streamType }).event
+                walHandle.readEventEnvelopeAt<I, E>(streamSource.readLong(), streamTypeFinder = { _ -> streamType })
             }
         }
     }

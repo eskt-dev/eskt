@@ -52,10 +52,10 @@ internal class InMemoryStorage : Storage {
         add(streamType, streamId, expectedVersion = version - 1, listOf(event), metadata)
     }
 
-    override fun <I, E> getEvent(streamType: StreamType<I, E>, position: Long): E = events[position.toInt() - 1].event as E
+    override fun <I, E> getEvent(streamType: StreamType<I, E>, position: Long): EventEnvelope<I, E> = events[position.toInt() - 1] as EventEnvelope<I, E>
 
-    override fun <I, E> getStreamEvent(streamType: StreamType<I, E>, streamId: I, version: Int): E {
+    override fun <I, E> getStreamEvent(streamType: StreamType<I, E>, streamId: I, version: Int): EventEnvelope<I, E> {
         val eventEnvelopes = eventsByStreamId[streamId as Any] as List<EventEnvelope<I, E>>
-        return eventEnvelopes[version - 1].event
+        return eventEnvelopes[version - 1]
     }
 }
