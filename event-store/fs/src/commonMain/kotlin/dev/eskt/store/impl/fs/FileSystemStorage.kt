@@ -3,7 +3,9 @@ package dev.eskt.store.impl.fs
 import dev.eskt.store.api.BinarySerializableStreamType
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata
+import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
+import dev.eskt.store.impl.common.binary.serialization.DefaultEventMetadataSerializer
 import dev.eskt.store.storage.api.ExpectedVersionMismatch
 import dev.eskt.store.storage.api.Storage
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -20,6 +22,7 @@ import okio.withLock
 @OptIn(ExperimentalSerializationApi::class)
 public class FileSystemStorage internal constructor(
     private val basePath: Path,
+    internal var eventMetadataSerializer: Serializer<EventMetadata, ByteArray> = DefaultEventMetadataSerializer,
 ) : Storage {
     public companion object {
         internal val fs = eventStoreFileSystem()
@@ -45,9 +48,16 @@ public class FileSystemStorage internal constructor(
         val stream = streamTypeFolder / ("stream-$streamIdAsString")
 
         // creating payloads in serialized form before acquiring any locks
+        val metadataPayload = eventMetadataSerializer.serialize(metadata)
         val walEntries = events.mapIndexed { index, event ->
             val eventPayload = binarySerializableStreamType.binaryEventSerializer.serialize(event)
-            val walEntry = WalEntry(type = streamType.id, id = streamIdAsString, version = expectedVersion + index + 1, payload = eventPayload)
+            val walEntry = WalEntry(
+                type = streamType.id,
+                id = streamIdAsString,
+                version = expectedVersion + index + 1,
+                eventPayload = eventPayload,
+                metadataPayload = metadataPayload,
+            )
             walEntrySerializer.encodeToByteArray(WalEntry.serializer(), walEntry)
         }
 
@@ -189,8 +199,8 @@ public class FileSystemStorage internal constructor(
             binarySerializableStreamType.idSerializer.deserialize(walEntry.id),
             walEntry.version,
             position,
-            emptyMap(),
-            binarySerializableStreamType.binaryEventSerializer.deserialize(walEntry.payload),
+            eventMetadataSerializer.deserialize(walEntry.metadataPayload),
+            binarySerializableStreamType.binaryEventSerializer.deserialize(walEntry.eventPayload),
         )
     }
 
@@ -203,6 +213,8 @@ public class FileSystemStorage internal constructor(
         @ProtoNumber(3)
         val version: Int,
         @ProtoNumber(4)
-        val payload: ByteArray,
+        val eventPayload: ByteArray,
+        @ProtoNumber(5)
+        val metadataPayload: ByteArray,
     )
 }

@@ -2,6 +2,7 @@ package dev.eskt.store.impl.fs
 
 import dev.eskt.store.api.AppendFailure
 import dev.eskt.store.api.EventEnvelope
+import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.LoadFailure
 import dev.eskt.store.api.Result
 import dev.eskt.store.api.StreamType
@@ -18,9 +19,9 @@ public class FileSystemStreamTypeHandler<I, E> internal constructor(
         )
     }
 
-    override fun appendStream(streamId: I, expectedVersion: Int, events: List<E>): Result<Int, AppendFailure> {
+    override fun appendStream(streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata): Result<Int, AppendFailure> {
         try {
-            storage.add(streamType, streamId, expectedVersion, events, emptyMap())
+            storage.add(streamType, streamId, expectedVersion, events, metadata)
         } catch (e: ExpectedVersionMismatch) {
             return Result.Failure(AppendFailure.ExpectedVersionMismatch(e.currentVersion, e.expectedVersion))
         }

@@ -1,7 +1,9 @@
 package dev.eskt.store.impl.fs
 
 import dev.eskt.store.api.BinarySerializableStreamType
+import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.EventStore
+import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
 import dev.eskt.store.api.StreamTypeHandler
 import okio.Path.Companion.toPath
@@ -24,6 +26,10 @@ public class FileSystemEventStore internal constructor(
     public inner class InitContext {
         public fun <I, E, T> registerStreamType(streamType: T) where T : StreamType<I, E>, T : BinarySerializableStreamType<I, E> {
             registeredTypes[streamType.id] = streamType as BinarySerializableStreamType<*, *>
+        }
+
+        public fun eventMetadataSerializer(eventMetadataSerializer: Serializer<EventMetadata, ByteArray>) {
+            storage.eventMetadataSerializer = eventMetadataSerializer
         }
     }
 

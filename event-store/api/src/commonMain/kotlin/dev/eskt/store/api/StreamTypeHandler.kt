@@ -19,5 +19,6 @@ public interface StreamTypeHandler<I, E> {
         streamId: I,
         expectedVersion: Int,
         events: List<E>,
+        metadata: EventMetadata = emptyMap(),
     ): Result<Int, AppendFailure>
 }

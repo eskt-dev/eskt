@@ -26,6 +26,10 @@ public abstract class AppendStreamTest<R : Storage, S : EventStore>(
         // when
         val eventStore = storeFactory(storage)
         val event1 = CarProducedEvent(vin = "123", producer = 1, make = "kia", model = "rio")
+        val metadata = mapOf(
+            "m1" to "some text",
+            "m2" to 123,
+        )
         eventStore
             .withStreamType(CarStreamType)
             .appendStream(
@@ -34,11 +38,12 @@ public abstract class AppendStreamTest<R : Storage, S : EventStore>(
                 events = listOf(
                     event1,
                 ),
+                metadata = metadata,
             )
             .unwrap()
 
         // then
-        val eventEnvelope1 = EventEnvelope(CarStreamType, "car-123", 1, 1, emptyMap(), event1)
+        val eventEnvelope1 = EventEnvelope(CarStreamType, "car-123", 1, 1, metadata, event1)
         assertEquals(eventEnvelope1, storage.getEvent(CarStreamType, 1))
         assertEquals(eventEnvelope1, storage.getStreamEvent(CarStreamType, "car-123", 1))
     }
