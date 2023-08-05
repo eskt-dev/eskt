@@ -39,7 +39,7 @@ internal class InMemoryStorage : Storage {
                     streamId = streamId as Any,
                     version = version,
                     position = position,
-                    metadata = emptyMap(),
+                    metadata = metadata,
                     event = event as Any,
                 )
                 this.events.add(envelope)

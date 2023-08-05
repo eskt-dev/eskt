@@ -8,7 +8,7 @@ import kotlinx.serialization.cbor.Cbor
 
 @OptIn(ExperimentalSerializationApi::class)
 public object CarStreamType : StreamType<String, CarEvent>, BinarySerializableStreamType<String, CarEvent> {
-    private val serializer = CarEvent.serializer()
+    private val eventSerializer = CarEvent.serializer()
 
     override val id: String = "Car"
 
@@ -28,11 +28,11 @@ public object CarStreamType : StreamType<String, CarEvent>, BinarySerializableSt
         }
 
         override fun serialize(obj: CarEvent): ByteArray {
-            return cbor.encodeToByteArray(serializer, obj)
+            return cbor.encodeToByteArray(eventSerializer, obj)
         }
 
         override fun deserialize(payload: ByteArray): CarEvent {
-            return cbor.decodeFromByteArray(serializer, payload)
+            return cbor.decodeFromByteArray(eventSerializer, payload)
         }
     }
 }
