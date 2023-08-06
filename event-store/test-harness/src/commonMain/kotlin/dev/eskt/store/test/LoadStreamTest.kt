@@ -12,17 +12,16 @@ import kotlin.test.assertEquals
 
 @Suppress("DuplicatedCode")
 public open class LoadStreamTest<R : Storage, S : EventStore>(
-    public val storageFactory: () -> R,
-    public val storeFactory: (storage: R) -> S,
+    private val factory: StreamTestFactory<R, S>,
 ) {
     @Test
     @JsName("test1")
     public fun `given no events - when loading events of a stream - list is empty`() {
         // given
-        val storage = storageFactory()
+        val storage = factory.createStorage()
 
         // when
-        val eventStore = storeFactory(storage)
+        val eventStore = factory.createEventStore(storage)
         val eventEnvelopes = eventStore
             .withStreamType(CarStreamType)
             .loadStream(
@@ -38,13 +37,13 @@ public open class LoadStreamTest<R : Storage, S : EventStore>(
     @JsName("test2")
     public fun `given 3 event from different streams - when loading one stream - correct events are loaded`() {
         // given
-        val storage = storageFactory()
+        val storage = factory.createStorage()
         storage.add(CarStreamType, "car-123", 1, CarProducedEvent(vin = "123", producer = 1, make = "kia", model = "rio"))
         storage.add(CarStreamType, "car-456", 1, CarProducedEvent(vin = "456", producer = 1, make = "kia", model = "rio"))
         storage.add(CarStreamType, "car-123", 2, CarSoldEvent(seller = 1, buyer = 2, 2500.00f))
 
         // when
-        val eventStore = storeFactory(storage)
+        val eventStore = factory.createEventStore(storage)
 
         (0..1).forEach { sinceVersion ->
             val eventEnvelopes = eventStore

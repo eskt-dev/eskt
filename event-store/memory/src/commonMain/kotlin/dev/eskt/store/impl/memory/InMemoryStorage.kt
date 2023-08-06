@@ -9,7 +9,9 @@ import kotlinx.atomicfu.locks.reentrantLock
 import kotlinx.atomicfu.locks.withLock
 
 @Suppress("UNCHECKED_CAST")
-internal class InMemoryStorage : Storage {
+internal class InMemoryStorage(
+    config: InMemoryConfig,
+) : Storage {
     private val events = mutableListOf<EventEnvelope<Any, Any>>()
     private val eventsByStreamId = mutableMapOf<Any, MutableList<EventEnvelope<Any, Any>>>()
 

@@ -5,9 +5,14 @@ import dev.eskt.store.api.StreamType
 import dev.eskt.store.api.StreamTypeHandler
 
 public class InMemoryEventStore internal constructor(
-    private val storage: InMemoryStorage,
+    config: InMemoryConfig,
+    private val storage: InMemoryStorage = InMemoryStorage(config),
 ) : EventStore {
-    public constructor() : this(InMemoryStorage())
+    public constructor(block: InMemoryConfigBuilder.() -> Unit) : this(
+        InMemoryConfigBuilder()
+            .apply(block)
+            .build(),
+    )
 
     override fun <I, E> withStreamType(type: StreamType<I, E>): StreamTypeHandler<I, E> {
         return InMemoryStreamTypeHandler(type, storage)

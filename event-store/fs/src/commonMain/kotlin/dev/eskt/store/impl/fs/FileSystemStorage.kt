@@ -3,9 +3,7 @@ package dev.eskt.store.impl.fs
 import dev.eskt.store.api.BinarySerializableStreamType
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata
-import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
-import dev.eskt.store.impl.common.binary.serialization.DefaultEventMetadataSerializer
 import dev.eskt.store.storage.api.ExpectedVersionMismatch
 import dev.eskt.store.storage.api.Storage
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -14,16 +12,17 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.protobuf.ProtoNumber
 import okio.Buffer
 import okio.FileHandle
-import okio.Path
 import okio.buffer
 import okio.use
 import okio.withLock
 
 @OptIn(ExperimentalSerializationApi::class)
 public class FileSystemStorage internal constructor(
-    private val basePath: Path,
-    internal var eventMetadataSerializer: Serializer<EventMetadata, ByteArray> = DefaultEventMetadataSerializer,
+    config: FileSystemConfig,
 ) : Storage {
+    private val basePath = config.basePath
+    private val eventMetadataSerializer = config.eventMetadataSerializer
+
     public companion object {
         internal val fs = eventStoreFileSystem()
         private val walEntrySerializer = ProtoBuf { }
