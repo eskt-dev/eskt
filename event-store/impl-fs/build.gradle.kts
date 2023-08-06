@@ -12,7 +12,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(":event-store:api"))
-                implementation(project(":event-store:storage-api"))
+                implementation(project(":event-store:impl-common"))
                 implementation("com.squareup.okio:okio:3.4.0")
                 implementation(libs.kotlinx.serialization.cbor) // used for default metadata serializer only
                 implementation(libs.kotlinx.serialization.protobuf)

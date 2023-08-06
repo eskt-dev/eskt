@@ -11,7 +11,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api(project(":event-store:storage-api"))
+                api(project(":event-store:impl-common"))
                 implementation(libs.kotlinx.serialization.core)
                 implementation(libs.kotlinx.serialization.cbor)
                 implementation(kotlin("test"))

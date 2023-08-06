@@ -11,7 +11,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(":event-store:api"))
-                implementation(project(":event-store:storage-api"))
+                implementation(project(":event-store:impl-common"))
                 implementation(libs.kotlinx.atomicfu)
             }
         }

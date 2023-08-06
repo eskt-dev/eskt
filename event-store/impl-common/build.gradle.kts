@@ -16,4 +16,4 @@ kotlin {
     }
 }
 
-setupPublishing("event-store-storage-api")
+setupPublishing("event-store-impl-common")
