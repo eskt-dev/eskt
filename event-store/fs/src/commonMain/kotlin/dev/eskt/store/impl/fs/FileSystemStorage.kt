@@ -12,6 +12,8 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.protobuf.ProtoNumber
 import okio.Buffer
 import okio.FileHandle
+import okio.Path
+import okio.Path.Companion.toPath
 import okio.buffer
 import okio.use
 import okio.withLock
@@ -22,6 +24,7 @@ public class FileSystemStorage internal constructor(
 ) : Storage {
     private val basePath = config.basePath
     private val eventMetadataSerializer = config.eventMetadataSerializer
+    private val registeredTypes = config.registeredTypes.associateBy { it.id }
 
     public companion object {
         internal val fs = eventStoreFileSystem()
@@ -38,21 +41,18 @@ public class FileSystemStorage internal constructor(
     }
 
     override fun <I, E> add(streamType: StreamType<I, E>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
-        val binarySerializableStreamType = streamType as BinarySerializableStreamType<I, E>
-        val streamTypeFolder = basePath / streamType.id.lowercase()
-        fs.createDirectories(streamTypeFolder)
+        streamType as BinarySerializableStreamType<I, E>
 
-        val streamIdAsString: String = binarySerializableStreamType.idSerializer.serialize(streamId)
-
-        val stream = streamTypeFolder / ("stream-$streamIdAsString")
+        val streamPath = basePath / toPathComponent(streamId)
+        fs.createDirectories(streamPath.parent!!)
 
         // creating payloads in serialized form before acquiring any locks
         val metadataPayload = eventMetadataSerializer.serialize(metadata)
         val walEntries = events.mapIndexed { index, event ->
-            val eventPayload = binarySerializableStreamType.binaryEventSerializer.serialize(event)
+            val eventPayload = streamType.binaryEventSerializer.serialize(event)
             val walEntry = WalEntry(
                 type = streamType.id,
-                id = streamIdAsString,
+                id = streamType.idSerializer.serialize(streamId),
                 version = expectedVersion + index + 1,
                 eventPayload = eventPayload,
                 metadataPayload = metadataPayload,
@@ -60,7 +60,7 @@ public class FileSystemStorage internal constructor(
             walEntrySerializer.encodeToByteArray(WalEntry.serializer(), walEntry)
         }
 
-        fs.openReadWrite(stream).use { streamHandle ->
+        fs.openReadWrite(streamPath).use { streamHandle ->
             streamHandle.lock.withLock {
                 if (streamHandle.size() != expectedVersion * streamEntrySizeInBytes) {
                     throw ExpectedVersionMismatch((streamHandle.size() / streamEntrySizeInBytes).toInt(), expectedVersion)
@@ -120,24 +120,20 @@ public class FileSystemStorage internal constructor(
         add(streamType, streamId, expectedVersion = version - 1, listOf(event), metadata)
     }
 
-    internal fun <I, E> instanceEnvelopes(streamType: StreamType<I, E>, streamId: I, sinceVersion: Int): List<EventEnvelope<I, E>> {
-        val binarySerializableStreamType = streamType as BinarySerializableStreamType<I, E>
-        val streamTypeFolder = basePath / streamType.id.lowercase()
+    override fun <I, E> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<I, E>> {
+        val streamPath = basePath / toPathComponent(streamId)
 
-        val streamIdAsString: String = binarySerializableStreamType.idSerializer.serialize(streamId)
-
-        val stream = streamTypeFolder / ("stream-$streamIdAsString")
-        if (!fs.exists(stream)) {
+        if (!fs.exists(streamPath)) {
             return emptyList()
         }
 
-        fs.openReadOnly(stream).use { streamHandle ->
+        fs.openReadOnly(streamPath).use { streamHandle ->
             val streamSource = streamHandle.source(sinceVersion * streamEntrySizeInBytes).buffer()
             fs.openReadOnly(walPath).use { walHandle ->
                 return buildList {
                     while (!streamSource.exhausted()) {
                         val addr = streamSource.readLong()
-                        val envelope = walHandle.readEventEnvelopeAt<I, E>(addr, streamTypeFinder = { _ -> streamType })
+                        val envelope = walHandle.readEventEnvelopeAt<I, E>(addr, streamTypeFinder = { id -> registeredTypes[id].asBinaryStreamType() })
                         add(envelope)
                     }
                 }
@@ -145,41 +141,39 @@ public class FileSystemStorage internal constructor(
         }
     }
 
-    override fun <I, E> getEvent(streamType: StreamType<I, E>, position: Long): EventEnvelope<I, E> {
+    override fun <I, E> getEventByPosition(position: Long): EventEnvelope<I, E> {
         if (!fs.exists(posPath)) {
             throw IllegalStateException("Event store is empty, file $posPath does not exist")
         }
 
         return fs.openReadOnly(posPath).use { posHandle ->
             val posSource = posHandle.source((position - 1) * positionEntrySizeInBytes).buffer()
+            val addr = posSource.readLong()
             fs.openReadOnly(walPath).use { walHandle ->
-                walHandle.readEventEnvelopeAt(posSource.readLong(), streamTypeFinder = { _ -> streamType })
+                walHandle.readEventEnvelopeAt(addr, streamTypeFinder = { id -> registeredTypes[id].asBinaryStreamType() })
             }
         }
     }
 
-    override fun <I, E> getStreamEvent(streamType: StreamType<I, E>, streamId: I, version: Int): EventEnvelope<I, E> {
-        val binarySerializableStreamType = streamType as BinarySerializableStreamType<I, E>
-        val streamTypeFolder = basePath / streamType.id.lowercase()
+    override fun <I, E> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<I, E> {
+        val streamPath = basePath / toPathComponent(streamId)
 
-        val streamIdAsString: String = binarySerializableStreamType.idSerializer.serialize(streamId)
-
-        val stream = streamTypeFolder / ("stream-$streamIdAsString")
-        if (!fs.exists(stream)) {
-            throw IllegalStateException("Stream $streamId is empty, file $stream does not exist")
+        if (!fs.exists(streamPath)) {
+            throw IllegalStateException("Stream $streamId is empty, file $streamPath does not exist")
         }
 
-        return fs.openReadOnly(stream).use { streamHandle ->
+        return fs.openReadOnly(streamPath).use { streamHandle ->
             val streamSource = streamHandle.source((version - 1) * streamEntrySizeInBytes).buffer()
+            val addr = streamSource.readLong()
             fs.openReadOnly(walPath).use { walHandle ->
-                walHandle.readEventEnvelopeAt<I, E>(streamSource.readLong(), streamTypeFinder = { _ -> streamType })
+                walHandle.readEventEnvelopeAt(addr, streamTypeFinder = { id -> registeredTypes[id].asBinaryStreamType() })
             }
         }
     }
 
     private fun <I, E> FileHandle.readEventEnvelopeAt(
         addr: Long,
-        streamTypeFinder: (typeId: String) -> StreamType<*, *>,
+        streamTypeFinder: (typeId: String) -> BinarySerializableStreamType<I, E>,
     ): EventEnvelope<I, E> {
         val walBuffer = source(addr).buffer()
         val entrySize = walBuffer.readInt()
@@ -190,17 +184,23 @@ public class FileSystemStorage internal constructor(
 
         val streamType = streamTypeFinder(walEntry.type)
 
-        @Suppress("UNCHECKED_CAST")
-        val binarySerializableStreamType = streamType as BinarySerializableStreamType<I, E>
-
         return EventEnvelope(
             streamType,
-            binarySerializableStreamType.idSerializer.deserialize(walEntry.id),
+            streamType.idSerializer.deserialize(walEntry.id),
             walEntry.version,
             position,
             eventMetadataSerializer.deserialize(walEntry.metadataPayload),
-            binarySerializableStreamType.binaryEventSerializer.deserialize(walEntry.eventPayload),
+            streamType.binaryEventSerializer.deserialize(walEntry.eventPayload),
         )
+    }
+
+    private fun <I> toPathComponent(streamId: I): Path {
+        return streamId.toString().split('/').fold("streams".toPath()) { current, next -> current / next }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private inline fun <I, E> StreamType<*, *>?.asBinaryStreamType(): BinarySerializableStreamType<I, E> {
+        return this as BinarySerializableStreamType<I, E>
     }
 
     @Serializable

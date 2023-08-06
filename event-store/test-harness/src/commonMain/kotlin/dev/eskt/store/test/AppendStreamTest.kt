@@ -43,8 +43,8 @@ public abstract class AppendStreamTest<R : Storage, S : EventStore>(
 
         // then
         val eventEnvelope1 = EventEnvelope(CarStreamType, "car-123", 1, 1, metadata, event1)
-        assertEquals(eventEnvelope1, storage.getEvent(CarStreamType, 1))
-        assertEquals(eventEnvelope1, storage.getStreamEvent(CarStreamType, "car-123", 1))
+        assertEquals(eventEnvelope1, storage.getEventByPosition(1))
+        assertEquals(eventEnvelope1, storage.getEventByStreamVersion("car-123", 1))
     }
 
     @Test
@@ -71,8 +71,8 @@ public abstract class AppendStreamTest<R : Storage, S : EventStore>(
 
         // then
         val eventEnvelope1 = EventEnvelope(CarStreamType, "car-123", 2, 3, emptyMap(), event1)
-        assertEquals(eventEnvelope1, storage.getEvent(CarStreamType, 3))
-        assertEquals(eventEnvelope1, storage.getStreamEvent(CarStreamType, "car-123", 2))
+        assertEquals(eventEnvelope1, storage.getEventByPosition(3))
+        assertEquals(eventEnvelope1, storage.getEventByStreamVersion("car-123", 2))
     }
 
     @Test

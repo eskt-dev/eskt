@@ -11,7 +11,9 @@ public interface Storage {
     @Throws(ExpectedVersionMismatch::class)
     public fun <I, E> add(streamType: StreamType<I, E>, streamId: I, version: Int, event: E, metadata: EventMetadata = emptyMap())
 
-    public fun <I, E> getEvent(streamType: StreamType<I, E>, position: Long): EventEnvelope<I, E>
+    public fun <I, E> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<I, E>>
 
-    public fun <I, E> getStreamEvent(streamType: StreamType<I, E>, streamId: I, version: Int): EventEnvelope<I, E>
+    public fun <I, E> getEventByPosition(position: Long): EventEnvelope<I, E>
+
+    public fun <I, E> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<I, E>
 }

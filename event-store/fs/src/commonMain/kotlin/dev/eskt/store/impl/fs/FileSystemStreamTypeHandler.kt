@@ -8,14 +8,15 @@ import dev.eskt.store.api.Result
 import dev.eskt.store.api.StreamType
 import dev.eskt.store.api.StreamTypeHandler
 import dev.eskt.store.storage.api.ExpectedVersionMismatch
+import dev.eskt.store.storage.api.Storage
 
 public class FileSystemStreamTypeHandler<I, E> internal constructor(
     override val streamType: StreamType<I, E>,
-    private val storage: FileSystemStorage,
+    private val storage: Storage,
 ) : StreamTypeHandler<I, E> {
     override fun loadStream(streamId: I, sinceVersion: Int): Result<List<EventEnvelope<I, E>>, LoadFailure> {
         return Result.Ok(
-            storage.instanceEnvelopes(streamType, streamId, sinceVersion),
+            storage.getStreamEvents(streamId, sinceVersion),
         )
     }
 
