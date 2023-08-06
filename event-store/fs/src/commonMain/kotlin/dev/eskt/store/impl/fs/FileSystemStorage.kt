@@ -29,8 +29,8 @@ public class FileSystemStorage internal constructor(
     public companion object {
         internal val fs = eventStoreFileSystem()
         private val walEntrySerializer = ProtoBuf { }
-        private const val streamEntrySizeInBytes: Long = (Long.SIZE_BYTES).toLong()
-        private const val positionEntrySizeInBytes: Long = (Long.SIZE_BYTES).toLong()
+        private const val STREAM_ENTRY_SIZE_IN_BYTES: Long = (Long.SIZE_BYTES).toLong()
+        private const val POSITION_ENTRY_SIZE_IN_BYTES: Long = (Long.SIZE_BYTES).toLong()
     }
 
     private val walPath = basePath / "wal"
@@ -62,8 +62,8 @@ public class FileSystemStorage internal constructor(
 
         fs.openReadWrite(streamPath).use { streamHandle ->
             streamHandle.lock.withLock {
-                if (streamHandle.size() != expectedVersion * streamEntrySizeInBytes) {
-                    throw ExpectedVersionMismatch((streamHandle.size() / streamEntrySizeInBytes).toInt(), expectedVersion)
+                if (streamHandle.size() != expectedVersion * STREAM_ENTRY_SIZE_IN_BYTES) {
+                    throw ExpectedVersionMismatch((streamHandle.size() / STREAM_ENTRY_SIZE_IN_BYTES).toInt(), expectedVersion)
                 }
 
                 val walAddresses = fs.openReadWrite(walPath).use { walHandle ->
@@ -128,7 +128,7 @@ public class FileSystemStorage internal constructor(
         }
 
         fs.openReadOnly(streamPath).use { streamHandle ->
-            val streamSource = streamHandle.source(sinceVersion * streamEntrySizeInBytes).buffer()
+            val streamSource = streamHandle.source(sinceVersion * STREAM_ENTRY_SIZE_IN_BYTES).buffer()
             fs.openReadOnly(walPath).use { walHandle ->
                 return buildList {
                     while (!streamSource.exhausted()) {
@@ -147,7 +147,7 @@ public class FileSystemStorage internal constructor(
         }
 
         return fs.openReadOnly(posPath).use { posHandle ->
-            val posSource = posHandle.source((position - 1) * positionEntrySizeInBytes).buffer()
+            val posSource = posHandle.source((position - 1) * POSITION_ENTRY_SIZE_IN_BYTES).buffer()
             val addr = posSource.readLong()
             fs.openReadOnly(walPath).use { walHandle ->
                 walHandle.readEventEnvelopeAt(addr, streamTypeFinder = { id -> registeredTypes[id].asBinaryStreamType() })
@@ -163,7 +163,7 @@ public class FileSystemStorage internal constructor(
         }
 
         return fs.openReadOnly(streamPath).use { streamHandle ->
-            val streamSource = streamHandle.source((version - 1) * streamEntrySizeInBytes).buffer()
+            val streamSource = streamHandle.source((version - 1) * STREAM_ENTRY_SIZE_IN_BYTES).buffer()
             val addr = streamSource.readLong()
             fs.openReadOnly(walPath).use { walHandle ->
                 walHandle.readEventEnvelopeAt(addr, streamTypeFinder = { id -> registeredTypes[id].asBinaryStreamType() })
