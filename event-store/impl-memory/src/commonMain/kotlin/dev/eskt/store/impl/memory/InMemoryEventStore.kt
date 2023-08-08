@@ -15,6 +15,6 @@ public class InMemoryEventStore internal constructor(
     )
 
     override fun <I, E> withStreamType(type: StreamType<I, E>): StreamTypeHandler<I, E> {
-        return InMemoryStreamTypeHandler(type, storage)
+        return dev.eskt.store.impl.common.base.StreamTypeHandler(type, storage)
     }
 }

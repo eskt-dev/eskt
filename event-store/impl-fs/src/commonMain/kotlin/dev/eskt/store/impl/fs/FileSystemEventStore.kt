@@ -2,7 +2,6 @@ package dev.eskt.store.impl.fs
 
 import dev.eskt.store.api.EventStore
 import dev.eskt.store.api.StreamType
-import dev.eskt.store.api.StreamTypeHandler
 
 public class FileSystemEventStore internal constructor(
     config: FileSystemConfig,
@@ -14,7 +13,7 @@ public class FileSystemEventStore internal constructor(
             .build(),
     )
 
-    override fun <I, E> withStreamType(type: StreamType<I, E>): StreamTypeHandler<I, E> {
-        return FileSystemStreamTypeHandler(type, storage)
+    override fun <I, E> withStreamType(type: StreamType<I, E>): dev.eskt.store.api.StreamTypeHandler<I, E> {
+        return dev.eskt.store.impl.common.base.StreamTypeHandler(type, storage)
     }
 }
