@@ -116,10 +116,6 @@ public class FileSystemStorage internal constructor(
         }
     }
 
-    override fun <I, E> add(streamType: StreamType<I, E>, streamId: I, version: Int, event: E, metadata: EventMetadata) {
-        add(streamType, streamId, expectedVersion = version - 1, listOf(event), metadata)
-    }
-
     override fun <I, E> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<I, E>> {
         val streamPath = basePath / toPathComponent(streamId)
 

@@ -49,10 +49,6 @@ internal class InMemoryStorage(
         }
     }
 
-    override fun <I, E> add(streamType: StreamType<I, E>, streamId: I, version: Int, event: E, metadata: EventMetadata) {
-        add(streamType, streamId, expectedVersion = version - 1, listOf(event), metadata)
-    }
-
     override fun <I, E> getEventByPosition(position: Long): EventEnvelope<I, E> = events[position.toInt() - 1] as EventEnvelope<I, E>
 
     override fun <I, E> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<I, E> {
