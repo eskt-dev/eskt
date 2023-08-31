@@ -5,7 +5,7 @@ import dev.eskt.store.test.StreamTestFactory
 import dev.eskt.store.test.w.car.CarStreamType
 
 internal class InMemoryAppendStreamTest : AppendStreamTest<InMemoryStorage, InMemoryEventStore>(
-    object : StreamTestFactory<InMemoryStorage, InMemoryEventStore> {
+    object : StreamTestFactory<InMemoryStorage, InMemoryEventStore>() {
         private val config = InMemoryConfig(
             registeredTypes = listOf(
                 CarStreamType,
