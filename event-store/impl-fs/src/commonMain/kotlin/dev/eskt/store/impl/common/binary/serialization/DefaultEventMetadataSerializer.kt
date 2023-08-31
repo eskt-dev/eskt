@@ -4,9 +4,8 @@ import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.Serializer
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
-import kotlinx.serialization.decodeFromByteArray
-import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.serializer
 
 /**
  * Default binary serializer for [EventMetadata].
@@ -20,11 +19,13 @@ public object DefaultEventMetadataSerializer : Serializer<EventMetadata, ByteArr
         }
     }
 
+    private val serializer = cbor.serializersModule.serializer<EventMetadata>()
+
     override fun serialize(obj: EventMetadata): ByteArray {
-        return cbor.encodeToByteArray(obj)
+        return cbor.encodeToByteArray(serializer, obj)
     }
 
     override fun deserialize(payload: ByteArray): EventMetadata {
-        return cbor.decodeFromByteArray(payload)
+        return cbor.decodeFromByteArray(serializer, payload)
     }
 }
