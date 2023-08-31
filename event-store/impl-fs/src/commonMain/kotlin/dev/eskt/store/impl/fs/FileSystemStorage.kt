@@ -52,7 +52,7 @@ public class FileSystemStorage internal constructor(
             val eventPayload = streamType.binaryEventSerializer.serialize(event)
             val walEntry = WalEntry(
                 type = streamType.id,
-                id = streamType.idSerializer.serialize(streamId),
+                id = streamType.stringIdSerializer.serialize(streamId),
                 version = expectedVersion + index + 1,
                 eventPayload = eventPayload,
                 metadataPayload = metadataPayload,
@@ -182,7 +182,7 @@ public class FileSystemStorage internal constructor(
 
         return EventEnvelope(
             streamType,
-            streamType.idSerializer.deserialize(walEntry.id),
+            streamType.stringIdSerializer.deserialize(walEntry.id),
             walEntry.version,
             position,
             eventMetadataSerializer.deserialize(walEntry.metadataPayload),

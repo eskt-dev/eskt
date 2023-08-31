@@ -12,7 +12,7 @@ public object CarStreamType : StreamType<String, CarEvent>, BinarySerializableSt
 
     override val id: String = "Car"
 
-    override val idSerializer: Serializer<String, String> = object : Serializer<String, String> {
+    override val stringIdSerializer: Serializer<String, String> = object : Serializer<String, String> {
         override fun serialize(obj: String): String {
             return obj
         }
