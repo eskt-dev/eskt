@@ -9,13 +9,12 @@ internal class PostgresqlLoadStreamTest : LoadStreamTest<PostgresqlStorage, Post
 ) {
     @BeforeTest
     fun beforeEach() {
-        factory.config.create()
+        factory.connectionConfig.create("event")
     }
 
     @AfterTest
     fun afterEach() {
-        factory.stores.forEach { s -> s.close() }
-        factory.clear()
-        factory.config.drop()
+        factory.closeAll()
+        factory.connectionConfig.drop()
     }
 }

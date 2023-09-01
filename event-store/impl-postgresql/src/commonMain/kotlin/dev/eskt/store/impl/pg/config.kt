@@ -9,7 +9,7 @@ import dev.eskt.store.impl.common.string.serialization.DefaultEventMetadataSeria
 internal class PostgresqlConfig(
     val registeredTypes: List<StreamType<*, *>>,
     val eventMetadataSerializer: Serializer<EventMetadata, String>,
-    val connectionConfig: ConnectionConfig,
+    val dataSource: DataSource,
     val eventTable: String,
 ) {
     private val registeredTypeById: Map<String, StreamType<*, *>> by lazy { registeredTypes.associateBy { it.id } }
@@ -25,7 +25,7 @@ internal class PostgresqlConfig(
     )
 }
 
-public data class ConnectionConfig(
+internal data class ConnectionConfig(
     val host: String,
     val port: Int,
     val database: String,
@@ -33,7 +33,7 @@ public data class ConnectionConfig(
     val user: String,
     val pass: String,
     val minPoolSize: Int = 1,
-    val maxPoolSize: Int = 10,
+    val maxPoolSize: Int = 2,
 )
 
 internal data class TableInfo(
@@ -46,7 +46,7 @@ internal data class TableInfo(
 }
 
 public class PostgresqlConfigBuilder(
-    private val connectionConfig: ConnectionConfig,
+    private val datasource: DataSource,
     private val eventTable: String,
 ) {
     private val registeredTypes = mutableListOf<StringSerializableStreamType<*, *>>()
@@ -64,7 +64,7 @@ public class PostgresqlConfigBuilder(
     internal fun build(): PostgresqlConfig = PostgresqlConfig(
         registeredTypes = registeredTypes,
         eventMetadataSerializer = eventMetadataSerializer,
-        connectionConfig = connectionConfig,
+        dataSource = datasource,
         eventTable = eventTable,
     )
 }

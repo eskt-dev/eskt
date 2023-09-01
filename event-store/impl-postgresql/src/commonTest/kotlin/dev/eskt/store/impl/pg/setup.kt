@@ -1,5 +1,8 @@
 package dev.eskt.store.impl.pg
 
-internal expect fun PostgresqlConfig.create()
+@OptIn(ExperimentalStdlibApi::class)
+internal expect fun ConnectionConfig.dataSource(closeables: MutableList<AutoCloseable>): DataSource
 
-internal expect fun PostgresqlConfig.drop()
+internal expect fun ConnectionConfig.create(eventTable: String)
+
+internal expect fun ConnectionConfig.drop()

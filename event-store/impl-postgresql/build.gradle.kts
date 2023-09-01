@@ -24,6 +24,10 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 implementation(libs.postgresql.jdbc)
+            }
+        }
+        val jvmTest by getting {
+            dependencies {
                 implementation(libs.hikaricp)
             }
         }
