@@ -14,6 +14,7 @@ kotlin {
                 api(project(":event-store:impl-common"))
                 implementation(libs.kotlinx.serialization.core)
                 implementation(libs.kotlinx.serialization.cbor)
+                implementation(libs.kotlinx.serialization.json)
                 implementation(kotlin("test"))
             }
         }

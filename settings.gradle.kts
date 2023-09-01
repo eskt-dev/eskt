@@ -18,5 +18,6 @@ include(":event-store:impl-common")
 
 include(":event-store:impl-memory")
 include(":event-store:impl-fs")
+include(":event-store:impl-postgresql")
 
 include(":event-store:test-harness")

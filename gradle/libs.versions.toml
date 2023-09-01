@@ -4,6 +4,8 @@ kotlinx-coroutines = "1.7.2"
 kotlinx-serialization = "1.5.1"
 kotlinx-atomicfu = "0.21.0"
 uuid = "0.7.1"
+postgresql-jdbc = "42.6.0"
+hikaricp = "5.0.1"
 
 [libraries]
 
@@ -17,3 +19,6 @@ kotlinx-serialization-cbor = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-serialization-protobuf = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-protobuf", version.ref = "kotlinx-serialization" }
 
 uuid = { group = "com.benasher44", name = "uuid", version.ref = "uuid" }
+
+postgresql-jdbc = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql-jdbc" }
+hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikaricp" }
