@@ -12,6 +12,8 @@ import kotlinx.atomicfu.locks.withLock
 internal class InMemoryStorage(
     config: InMemoryConfig,
 ) : Storage {
+    private val registeredTypes = config.registeredTypes.associateBy { it.id }
+
     private val events = mutableListOf<EventEnvelope<Any, Any>>()
     private val eventsByStreamId = mutableMapOf<Any, MutableList<EventEnvelope<Any, Any>>>()
 
@@ -25,6 +27,7 @@ internal class InMemoryStorage(
     }
 
     override fun <I, E> add(streamType: StreamType<I, E>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
+        if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
         writeLock.withLock {
             val streamEvents = eventsByStreamId[streamId as Any]
                 ?: mutableListOf<EventEnvelope<Any, Any>>().also { eventsByStreamId[streamId] = it }
