@@ -25,32 +25,29 @@ internal class PostgresqlStorage(
             )
         }
 
-        databaseAdapter.persistEntries(entries, config.streamTypeTableInfoInfoById.getValue(streamType.id))
+        databaseAdapter.persistEntries(entries, config.tableInfo)
     }
 
     override fun <I, E> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<I, E>> {
-        val tableInfo = config.streamTypeTableInfoInfoById.values.distinct()
         val entries = databaseAdapter.getEntriesByStreamIdAndVersion(
             streamId = streamId.toString(),
             sinceVersion = sinceVersion,
-            tableInfos = tableInfo,
+            tableInfo = config.tableInfo,
         )
         return entries.map { entry -> entry.toEventEnvelope() }
     }
 
     override fun <I, E> getEventByPosition(position: Long): EventEnvelope<I, E> {
-        val tableInfo = config.streamTypeTableInfoInfoById.values.distinct()
-        val entry = databaseAdapter.getEntryByPosition(position, tableInfo)
+        val entry = databaseAdapter.getEntryByPosition(position, config.tableInfo)
         return entry.toEventEnvelope()
     }
 
     override fun <I, E> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<I, E> {
-        val tableInfo = config.streamTypeTableInfoInfoById.values.distinct()
         val entry = databaseAdapter.getEntriesByStreamIdAndVersion(
             streamId = streamId.toString(),
             sinceVersion = version - 1,
             limit = 1,
-            tableInfos = tableInfo,
+            tableInfo = config.tableInfo,
         ).single()
         return entry.toEventEnvelope()
     }

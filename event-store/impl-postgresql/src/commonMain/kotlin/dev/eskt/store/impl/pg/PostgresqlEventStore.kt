@@ -10,9 +10,10 @@ public class PostgresqlEventStore internal constructor(
 ) : EventStore {
     public constructor(
         connectionConfig: ConnectionConfig,
+        eventTable: String,
         block: PostgresqlConfigBuilder.() -> Unit,
     ) : this(
-        PostgresqlConfigBuilder(connectionConfig)
+        PostgresqlConfigBuilder(connectionConfig, eventTable)
             .apply(block)
             .build(),
     )

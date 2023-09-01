@@ -1,6 +1,5 @@
 package dev.eskt.store.impl.pg
 
-import dev.eskt.store.api.DatabaseStreamType
 import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
@@ -11,6 +10,7 @@ internal class PostgresqlConfig(
     val registeredTypes: List<StreamType<*, *>>,
     val eventMetadataSerializer: Serializer<EventMetadata, String>,
     val connectionConfig: ConnectionConfig,
+    val eventTable: String,
 ) {
     private val registeredTypeById: Map<String, StreamType<*, *>> by lazy { registeredTypes.associateBy { it.id } }
 
@@ -19,21 +19,10 @@ internal class PostgresqlConfig(
         return registeredTypeById[id] as S? ?: throw IllegalStateException("Invalid stream type id $id")
     }
 
-    val streamTypeTableInfoInfoById: Map<String, StreamTypeTableInfo> by lazy {
-        registeredTypes
-            .map { it as DatabaseStreamType }
-            .associateBy { it.id }
-            .mapValues { entry ->
-                StreamTypeTableInfo(
-                    entry.value.eventTableSchema,
-                    entry.value.eventTableName,
-                    when (registeredTypes.single { it.id == entry.key }) {
-                        is StringSerializableStreamType -> StreamTypeTableInfo.PayloadType.Json
-                        else -> TODO("support other column types that are not string/json")
-                    },
-                )
-            }
-    }
+    val tableInfo = TableInfo(
+        table = eventTable,
+        payloadType = TableInfo.PayloadType.Json,
+    )
 }
 
 public data class ConnectionConfig(
@@ -47,8 +36,7 @@ public data class ConnectionConfig(
     val maxPoolSize: Int = 10,
 )
 
-internal data class StreamTypeTableInfo(
-    val schema: String,
+internal data class TableInfo(
     val table: String,
     val payloadType: PayloadType,
 ) {
@@ -59,11 +47,13 @@ internal data class StreamTypeTableInfo(
 
 public class PostgresqlConfigBuilder(
     private val connectionConfig: ConnectionConfig,
+    private val eventTable: String,
 ) {
     private val registeredTypes = mutableListOf<StringSerializableStreamType<*, *>>()
     private var eventMetadataSerializer: Serializer<EventMetadata, String> = DefaultEventMetadataSerializer
 
-    public fun <I, E, T> registerStreamType(streamType: T) where T : StreamType<I, E>, T : StringSerializableStreamType<I, E>, T : DatabaseStreamType<I, E> {
+    public fun <I, E, T> registerStreamType(streamType: T)
+    where T : StreamType<I, E>, T : StringSerializableStreamType<I, E> {
         registeredTypes += streamType as StringSerializableStreamType<*, *>
     }
 
@@ -75,5 +65,6 @@ public class PostgresqlConfigBuilder(
         registeredTypes = registeredTypes,
         eventMetadataSerializer = eventMetadataSerializer,
         connectionConfig = connectionConfig,
+        eventTable = eventTable,
     )
 }

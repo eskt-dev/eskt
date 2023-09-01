@@ -15,6 +15,7 @@ internal class PostgresqlAppendStreamTest : AppendStreamTest<PostgresqlStorage, 
             ),
             eventMetadataSerializer = DefaultEventMetadataSerializer,
             connectionConfig = generateTestConnectionConfig(),
+            eventTable = "event",
         )
 
         override fun createStorage(): PostgresqlStorage {

@@ -5,19 +5,19 @@ internal expect class DatabaseAdapter(
 ) {
     fun getEntryByPosition(
         position: Long,
-        tableInfos: List<StreamTypeTableInfo>,
+        tableInfo: TableInfo,
     ): PostgresqlStorage.DatabaseEntry
 
     fun getEntriesByStreamIdAndVersion(
         streamId: String,
         sinceVersion: Int,
         limit: Int = Int.MAX_VALUE,
-        tableInfos: List<StreamTypeTableInfo>,
+        tableInfo: TableInfo,
     ): List<PostgresqlStorage.DatabaseEntry>
 
     fun persistEntries(
         entries: List<PostgresqlStorage.DatabaseEntry>,
-        tableInfo: StreamTypeTableInfo,
+        tableInfo: TableInfo,
     )
 
     fun close()

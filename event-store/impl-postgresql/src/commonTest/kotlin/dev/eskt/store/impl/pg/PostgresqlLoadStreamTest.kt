@@ -15,6 +15,7 @@ internal class PostgresqlLoadStreamTest : LoadStreamTest<PostgresqlStorage, Post
             ),
             eventMetadataSerializer = DefaultEventMetadataSerializer,
             connectionConfig = generateTestConnectionConfig(),
+            eventTable = "event",
         )
 
         override fun createStorage(): PostgresqlStorage {
