@@ -13,8 +13,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @Suppress("DuplicatedCode")
-public open class AppendStreamTest<R : Storage, S : EventStore>(
-    protected val factory: StreamTestFactory<R, S>,
+public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFactory<R, S>>(
+    protected val factory: F,
 ) {
     @Test
     @JsName("test1")
