@@ -11,7 +11,7 @@ internal class PostgresqlStorage(
 ) : Storage {
     private val eventMetadataSerializer = config.eventMetadataSerializer
 
-    private val databaseAdapter = DatabaseAdapter(config.connectionConfig)
+    private val databaseAdapter = DatabaseAdapter(config.dataSource)
 
     override fun <I, E> add(streamType: StreamType<I, E>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
         streamType as StringSerializableStreamType<I, E>
@@ -50,10 +50,6 @@ internal class PostgresqlStorage(
             tableInfo = config.tableInfo,
         ).single()
         return entry.toEventEnvelope()
-    }
-
-    fun close() {
-        databaseAdapter.close()
     }
 
     private fun <E, I> DatabaseEntry.toEventEnvelope(): EventEnvelope<I, E> {

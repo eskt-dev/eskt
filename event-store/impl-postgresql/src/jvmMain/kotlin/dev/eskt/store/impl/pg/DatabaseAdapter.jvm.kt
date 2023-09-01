@@ -1,20 +1,13 @@
 package dev.eskt.store.impl.pg
 
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
 import dev.eskt.store.storage.api.ExpectedVersionMismatch
 import org.postgresql.util.PSQLState
 import java.sql.ResultSet
+import javax.sql.DataSource
 
 internal actual class DatabaseAdapter actual constructor(
-    connectionConfig: ConnectionConfig,
+    private val dataSource: DataSource,
 ) {
-    // TODO assess an alternative solution where the datasource is provided, so we don't have to manage stateful objects
-    private val hikariConfig: HikariConfig = connectionConfig.toHikariConfig()
-    private val dataSource: HikariDataSource by lazy {
-        HikariDataSource(hikariConfig)
-    }
-
     actual fun getEntryByPosition(
         position: Long,
         tableInfo: TableInfo,
@@ -122,9 +115,5 @@ internal actual class DatabaseAdapter actual constructor(
                 }
             }
         }
-    }
-
-    actual fun close() {
-        dataSource.close()
     }
 }

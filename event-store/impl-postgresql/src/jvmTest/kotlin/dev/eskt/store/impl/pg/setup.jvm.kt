@@ -2,29 +2,34 @@ package dev.eskt.store.impl.pg
 
 import com.zaxxer.hikari.HikariDataSource
 
-internal actual fun PostgresqlConfig.create() {
-    val connectionConfig = connectionConfig.copy(minPoolSize = 1, maxPoolSize = 1)
+@OptIn(ExperimentalStdlibApi::class)
+internal actual fun ConnectionConfig.dataSource(closeables: MutableList<AutoCloseable>): DataSource {
+    return HikariDataSource(toHikariConfig()).also { closeables.add(it) }
+}
 
-    val adminConnectionConfig = connectionConfig.copy(database = "postgres")
+internal actual fun ConnectionConfig.create(eventTable: String) {
+    val adminConnectionConfig = copy(database = "postgres", minPoolSize = 1, maxPoolSize = 1)
     val adminHikariConfig = adminConnectionConfig.toHikariConfig()
     val adminDataSource = HikariDataSource(adminHikariConfig)
 
     adminDataSource.connection.use { connection ->
-        connection.prepareStatement("create database ${connectionConfig.database};").use { ps ->
+        connection.prepareStatement("create database $database;").use { ps ->
             ps.executeUpdate()
         }
     }
 
-    val hikariConfig = connectionConfig.toHikariConfig()
+    adminDataSource.close()
+
+    val hikariConfig = toHikariConfig()
     val dataSource = HikariDataSource(hikariConfig)
 
     dataSource.connection.use { connection ->
-        connection.prepareStatement("create schema ${connectionConfig.schema};").use { ps ->
+        connection.prepareStatement("create schema $schema;").use { ps ->
             ps.executeUpdate()
         }
         connection.prepareStatement(
             """
-                CREATE TABLE ${connectionConfig.schema}.$eventTable
+                CREATE TABLE $schema.$eventTable
                 (
                     position    bigserial NOT NULL unique,
                     stream_type text      NOT NULL,
@@ -47,7 +52,7 @@ internal actual fun PostgresqlConfig.create() {
 
                 CREATE TRIGGER event_acquire_lock_before_insert
                     BEFORE INSERT
-                    ON ${connectionConfig.schema}.$eventTable
+                    ON $schema.$eventTable
                     FOR EACH STATEMENT
                 EXECUTE PROCEDURE acquire_write_lock();
             """.trimIndent(),
@@ -55,19 +60,18 @@ internal actual fun PostgresqlConfig.create() {
             ps.executeUpdate()
         }
     }
+
     dataSource.close()
-    adminDataSource.close()
 }
 
-internal actual fun PostgresqlConfig.drop() {
-    val connectionConfig = connectionConfig.copy(minPoolSize = 1, maxPoolSize = 1)
-
-    val adminConnectionConfig = connectionConfig.copy(database = "postgres")
+internal actual fun ConnectionConfig.drop() {
+    val adminConnectionConfig =
+        generateTestConnectionConfig().copy(database = "postgres", minPoolSize = 1, maxPoolSize = 1)
     val adminHikariConfig = adminConnectionConfig.toHikariConfig()
     val adminDataSource = HikariDataSource(adminHikariConfig)
 
     adminDataSource.connection.use { connection ->
-        connection.prepareStatement("drop database ${connectionConfig.database};").use { ps ->
+        connection.prepareStatement("drop database $database;").use { ps ->
             ps.executeUpdate()
         }
     }
