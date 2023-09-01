@@ -9,11 +9,13 @@ import dev.eskt.store.storage.api.Storage
 internal class PostgresqlStorage(
     internal val config: PostgresqlConfig,
 ) : Storage {
+    private val registeredTypes = config.registeredTypes.associateBy { it.id }
     private val eventMetadataSerializer = config.eventMetadataSerializer
 
     private val databaseAdapter = DatabaseAdapter(config.dataSource)
 
     override fun <I, E> add(streamType: StreamType<I, E>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
+        if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
         streamType as StringSerializableStreamType<I, E>
         val entries = events.map {
             DatabaseEntry(

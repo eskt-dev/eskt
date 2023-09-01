@@ -41,6 +41,7 @@ public class FileSystemStorage internal constructor(
     }
 
     override fun <I, E> add(streamType: StreamType<I, E>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
+        if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
         streamType as BinarySerializableStreamType<I, E>
 
         val streamPath = basePath / toPathComponent(streamId)
@@ -194,7 +195,7 @@ public class FileSystemStorage internal constructor(
         return streamId.toString().split('/').fold("streams".toPath()) { current, next -> current / next }
     }
 
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
     private inline fun <I, E> StreamType<*, *>?.asBinaryStreamType(): BinarySerializableStreamType<I, E> {
         return this as BinarySerializableStreamType<I, E>
     }
