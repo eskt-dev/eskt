@@ -8,12 +8,6 @@ import javax.sql.DataSource
 internal actual class DatabaseAdapter actual constructor(
     private val dataSource: DataSource,
 ) {
-    // TODO assess an alternative solution where the datasource is provided, so we don't have to manage stateful objects
-//    private val hikariConfig: HikariConfig = connectionConfig.toHikariConfig()
-//    private val dataSource: DataSource by lazy {
-//        HikariDataSource(hikariConfig)
-//    }
-
     actual fun getEntryByPosition(
         position: Long,
         tableInfo: TableInfo,
