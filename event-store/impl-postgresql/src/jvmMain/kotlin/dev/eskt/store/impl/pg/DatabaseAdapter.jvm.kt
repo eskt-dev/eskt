@@ -17,11 +17,10 @@ internal actual class DatabaseAdapter actual constructor(
 
     actual fun getEntryByPosition(
         position: Long,
-        tableInfos: List<StreamTypeTableInfo>,
+        tableInfo: TableInfo,
     ): PostgresqlStorage.DatabaseEntry {
         dataSource.connection.use { connection ->
-            val tableInfo = tableInfos.single()
-            connection.prepareStatement(selectEventByPositionSql(tableInfo.schema, tableInfo.table))
+            connection.prepareStatement(selectEventByPositionSql(tableInfo.table))
                 .use { ps ->
                     ps.setLong(1, position)
                     ps.executeQuery().use { rs ->
@@ -36,11 +35,10 @@ internal actual class DatabaseAdapter actual constructor(
         streamId: String,
         sinceVersion: Int,
         limit: Int,
-        tableInfos: List<StreamTypeTableInfo>,
+        tableInfo: TableInfo,
     ): List<PostgresqlStorage.DatabaseEntry> {
         dataSource.connection.use { connection ->
-            val tableInfo = tableInfos.single()
-            val stm = selectEventByStreamIdAndVersionSql(tableInfo.schema, tableInfo.table)
+            val stm = selectEventByStreamIdAndVersionSql(tableInfo.table)
             connection.prepareStatement(stm)
                 .use { ps ->
                     ps.setString(1, streamId)
@@ -68,14 +66,14 @@ internal actual class DatabaseAdapter actual constructor(
         )
     }
 
-    actual fun persistEntries(entries: List<PostgresqlStorage.DatabaseEntry>, tableInfo: StreamTypeTableInfo) {
+    actual fun persistEntries(entries: List<PostgresqlStorage.DatabaseEntry>, tableInfo: TableInfo) {
         val expectedVersion = entries[0].version - 1
         dataSource.connection.use { connection ->
             val columnType = when (tableInfo.payloadType) {
-                StreamTypeTableInfo.PayloadType.Json -> "json"
+                TableInfo.PayloadType.Json -> "json"
             }
 
-            connection.prepareStatement(selectMaxVersionByStreamIdSql(tableInfo.schema, tableInfo.table))
+            connection.prepareStatement(selectMaxVersionByStreamIdSql(tableInfo.table))
                 .use { ps ->
                     ps.setString(1, entries[0].id)
                     ps.executeQuery().use { rs ->
@@ -90,7 +88,7 @@ internal actual class DatabaseAdapter actual constructor(
                     }
                 }
 
-            connection.prepareStatement(insertEventSql(tableInfo.schema, tableInfo.table, columnType)).use { ps ->
+            connection.prepareStatement(insertEventSql(tableInfo.table, columnType)).use { ps ->
                 entries.forEach { entry ->
                     ps.setString(1, entry.type)
                     ps.setString(2, entry.id)

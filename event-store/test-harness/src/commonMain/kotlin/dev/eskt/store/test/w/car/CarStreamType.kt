@@ -1,7 +1,6 @@
 package dev.eskt.store.test.w.car
 
 import dev.eskt.store.api.BinarySerializableStreamType
-import dev.eskt.store.api.DatabaseStreamType
 import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
 import dev.eskt.store.api.StringSerializableStreamType
@@ -13,12 +12,9 @@ import kotlinx.serialization.json.Json
 public object CarStreamType :
     StreamType<String, CarEvent>,
     BinarySerializableStreamType<String, CarEvent>,
-    StringSerializableStreamType<String, CarEvent>,
-    DatabaseStreamType<String, CarEvent> {
-    private val eventSerializer = CarEvent.serializer()
+    StringSerializableStreamType<String, CarEvent> {
 
-    override val eventTableSchema: String = "event_store"
-    override val eventTableName: String = "event_1"
+    private val eventSerializer = CarEvent.serializer()
 
     override val id: String = "Car"
 
