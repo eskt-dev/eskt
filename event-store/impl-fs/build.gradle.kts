@@ -32,4 +32,4 @@ kotlin {
     }
 }
 
-setupPublishing("event-store-fs")
+setupPublishing("event-store-impl-fs")
