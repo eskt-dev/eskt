@@ -24,4 +24,4 @@ kotlin {
     }
 }
 
-setupPublishing("event-store-memory")
+setupPublishing("event-store-impl-memory")
