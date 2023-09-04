@@ -21,7 +21,8 @@ fun KotlinMultiplatformExtension.setupPlatforms(jvm: Boolean = true, native: Boo
 
     if (native) {
         linuxX64()
-        linuxArm64()
+        // waiting for Okio 3.6 release
+        // linuxArm64()
         macosX64()
         macosArm64()
     }
