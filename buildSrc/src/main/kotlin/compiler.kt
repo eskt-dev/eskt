@@ -6,6 +6,7 @@ fun Project.setupCompiler() {
     tasks.withType<KotlinCompile>()
         .configureEach {
             compilerOptions {
+                progressiveMode.set(true)
                 freeCompilerArgs.add("-Xexpect-actual-classes")
             }
         }
