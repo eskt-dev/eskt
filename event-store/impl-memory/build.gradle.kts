@@ -8,14 +8,14 @@ kotlin {
     setupPlatforms()
 
     sourceSets {
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 api(project(":event-store:api"))
                 implementation(project(":event-store:impl-common"))
                 implementation(libs.kotlinx.atomicfu)
             }
         }
-        val commonTest by getting {
+        commonTest {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(project(":event-store:test-harness"))
@@ -23,5 +23,7 @@ kotlin {
         }
     }
 }
+
+setupCompiler()
 
 setupPublishing("event-store-impl-memory")

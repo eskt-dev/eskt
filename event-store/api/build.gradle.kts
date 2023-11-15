@@ -8,13 +8,14 @@ kotlin {
     setupPlatforms()
 
     sourceSets {
-        val commonMain by getting
-        val commonTest by getting {
+        commonTest {
             dependencies {
                 implementation(kotlin("test"))
             }
         }
     }
 }
+
+setupCompiler()
 
 setupPublishing("event-store-api")

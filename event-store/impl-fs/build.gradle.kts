@@ -9,7 +9,7 @@ kotlin {
     setupPlatforms()
 
     sourceSets {
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 api(project(":event-store:api"))
                 implementation(project(":event-store:impl-common"))
@@ -18,18 +18,20 @@ kotlin {
                 implementation(libs.kotlinx.serialization.protobuf)
             }
         }
-        val commonTest by getting {
+        commonTest {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(project(":event-store:test-harness"))
             }
         }
-        val jsMain by getting {
+        jsMain {
             dependencies {
                 implementation(libs.okio.node)
             }
         }
     }
 }
+
+setupCompiler()
 
 setupPublishing("event-store-impl-fs")

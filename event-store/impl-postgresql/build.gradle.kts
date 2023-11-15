@@ -8,30 +8,32 @@ kotlin {
     setupPlatforms(jvm = true, native = false, node = false)
 
     sourceSets {
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 api(project(":event-store:api"))
                 implementation(project(":event-store:impl-common"))
                 implementation(libs.kotlinx.serialization.json)
             }
         }
-        val commonTest by getting {
+        commonTest {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(project(":event-store:test-harness"))
             }
         }
-        val jvmMain by getting {
+        jvmMain {
             dependencies {
                 implementation(libs.postgresql.jdbc)
             }
         }
-        val jvmTest by getting {
+        jvmTest {
             dependencies {
                 implementation(libs.hikaricp)
             }
         }
     }
 }
+
+setupCompiler()
 
 setupPublishing("event-store-impl-postgresql")

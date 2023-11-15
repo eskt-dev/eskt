@@ -1,11 +1,6 @@
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 fun KotlinMultiplatformExtension.setupPlatforms(jvm: Boolean = true, native: Boolean = true, node: Boolean = true) {
-    // Enable the default target hierarchy
-    @OptIn(ExperimentalKotlinGradlePluginApi::class)
-    targetHierarchy.default()
-
     jvmToolchain(17)
 
     if (jvm) {

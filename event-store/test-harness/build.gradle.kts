@@ -9,7 +9,7 @@ kotlin {
     setupPlatforms()
 
     sourceSets {
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 api(project(":event-store:impl-common"))
                 implementation(libs.kotlinx.serialization.core)
@@ -18,15 +18,17 @@ kotlin {
                 implementation(kotlin("test"))
             }
         }
-        val jvmMain by getting {
+        jvmMain {
             dependencies {
                 implementation(kotlin("test-junit"))
             }
         }
-        val jsMain by getting {
+        jsMain {
             dependencies {
                 implementation(kotlin("test-js"))
             }
         }
     }
 }
+
+setupCompiler()

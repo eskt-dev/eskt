@@ -1,4 +1,4 @@
-import gradle.kotlin.dsl.accessors._3b500bc768bc147381ee2b86a0d3cfe7.publishing
+import gradle.kotlin.dsl.accessors._39fc684ecd34fd87f7f7b5af98275af6.publishing
 import org.gradle.api.Project
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.kotlin.dsl.withType
