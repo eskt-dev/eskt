@@ -6,9 +6,10 @@ fun KotlinMultiplatformExtension.setupPlatforms(jvm: Boolean = true, native: Boo
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     targetHierarchy.default()
 
+    jvmToolchain(17)
+
     if (jvm) {
         jvm {
-            jvmToolchain(17)
             withJava()
         }
     }
