@@ -16,13 +16,13 @@ If you need to make changes, you can edit code however you like and test changes
 If you need to publish locally to test on other projects, you can use the following:
 
 ```shell
-./gradlew -Pversion=local-SNAPSHOT publishToMavenLocal
+./publish-local.sh
 ```
 
 If you're interested only in the JVM artefacts, you can run:
 
 ```shell
-./gradlew -Pversion=local-SNAPSHOT publishJvmPublicationToMavenLocal
+./publish-jvm-local.sh
 ```
 
 You can then change your dependency version to `local-SNAPSHOT` and make sure you have
