@@ -35,3 +35,6 @@ jobs:
       uses: gradle/gradle-build-action@v2
       with:
         arguments: check
+    - name: Build App Examples with Gradle
+      working-directory: app-examples/spring-webflux-r2dbc
+      run: ./gradlew check
