@@ -49,7 +49,7 @@ public class PostgresqlConfigBuilder(
     private val datasource: DataSource,
     private val eventTable: String,
 ) {
-    private val registeredTypes = mutableListOf<StringSerializableStreamType<*, *>>()
+    private val registeredTypes = mutableListOf<StreamType<*, *>>()
     private var eventMetadataSerializer: Serializer<EventMetadata, String> = DefaultEventMetadataSerializer
 
     public fun <I, E, T> registerStreamType(streamType: T)
