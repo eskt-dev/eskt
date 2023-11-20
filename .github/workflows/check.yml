@@ -36,5 +36,5 @@ jobs:
       with:
         arguments: check
     - name: Build App Examples with Gradle
-      working-directory: app-examples/spring-webflux-r2dbc
+      working-directory: app-examples/car-management-hexagonal-arch
       run: ./gradlew check

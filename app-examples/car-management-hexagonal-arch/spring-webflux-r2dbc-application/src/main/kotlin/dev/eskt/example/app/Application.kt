@@ -1,4 +1,4 @@
-package dev.eskt.example.springwebfluxr2dbc
+package dev.eskt.example.app
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

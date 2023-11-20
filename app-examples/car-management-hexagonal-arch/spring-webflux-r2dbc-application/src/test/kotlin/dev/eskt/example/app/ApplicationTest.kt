@@ -1,10 +1,10 @@
-package dev.eskt.example.springwebfluxr2dbc
+package dev.eskt.example.app
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
-class SpringWebfluxR2dbcApplicationTests {
+class ApplicationTest {
 
 	@Test
 	fun contextLoads() {
