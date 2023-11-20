@@ -12,9 +12,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":event-store:impl-common"))
-                implementation(libs.kotlinx.serialization.core)
-                implementation(libs.kotlinx.serialization.cbor)
-                implementation(libs.kotlinx.serialization.json)
+                api(project(":event-store:test-harness-model"))
                 implementation(kotlin("test"))
             }
         }
