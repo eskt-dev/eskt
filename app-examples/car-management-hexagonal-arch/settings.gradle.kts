@@ -8,4 +8,4 @@ dependencyResolutionManagement {
 rootProject.name = "car-management-hexagonal-arch"
 
 include(":domain")
-include(":spring-webflux-r2dbc-application")
+include(":spring-webflux-jpa-application")
