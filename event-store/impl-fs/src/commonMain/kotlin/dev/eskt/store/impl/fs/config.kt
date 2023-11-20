@@ -11,13 +11,13 @@ import okio.Path.Companion.toPath
 internal class FileSystemConfig(
     val basePath: Path,
     val eventMetadataSerializer: Serializer<EventMetadata, ByteArray>,
-    val registeredTypes: List<BinarySerializableStreamType<*, *>>,
+    val registeredTypes: List<StreamType<*, *>>,
 )
 
 public class FileSystemConfigBuilder(
     private val basePath: String,
 ) {
-    private val registeredTypes = mutableListOf<BinarySerializableStreamType<*, *>>()
+    private val registeredTypes = mutableListOf<StreamType<*, *>>()
     private var eventMetadataSerializer: Serializer<EventMetadata, ByteArray> = DefaultEventMetadataSerializer
 
     public fun <I, E, T> registerStreamType(streamType: T) where T : StreamType<I, E>, T : BinarySerializableStreamType<I, E> {

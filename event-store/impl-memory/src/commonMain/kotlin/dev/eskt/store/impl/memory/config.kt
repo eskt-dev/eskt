@@ -1,17 +1,16 @@
 package dev.eskt.store.impl.memory
 
-import dev.eskt.store.api.BinarySerializableStreamType
 import dev.eskt.store.api.StreamType
 
 internal class InMemoryConfig(
-    val registeredTypes: List<BinarySerializableStreamType<*, *>>,
+    val registeredTypes: List<StreamType<*, *>>,
 )
 
 public class InMemoryConfigBuilder {
-    private val registeredTypes = mutableListOf<BinarySerializableStreamType<*, *>>()
+    private val registeredTypes = mutableListOf<StreamType<*, *>>()
 
-    public fun <I, E, T> registerStreamType(streamType: T) where T : StreamType<I, E>, T : BinarySerializableStreamType<I, E> {
-        registeredTypes += streamType as BinarySerializableStreamType<*, *>
+    public fun <I, E, T> registerStreamType(streamType: T) where T : StreamType<I, E> {
+        registeredTypes += streamType
     }
 
     internal fun build(): InMemoryConfig = InMemoryConfig(
