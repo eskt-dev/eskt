@@ -25,7 +25,7 @@ public open class LoadStreamTest<R : Storage, S : EventStore, F : StreamTestFact
         val eventEnvelopes = eventStore
             .withStreamType(CarStreamType)
             .loadStream(
-                streamId = "car-123",
+                streamId = car1StreamId,
             )
             .unwrap()
 
@@ -38,9 +38,9 @@ public open class LoadStreamTest<R : Storage, S : EventStore, F : StreamTestFact
     public fun `given 3 event from different streams - when loading one stream - correct events are loaded`() {
         // given
         val storage = factory.newStorage()
-        storage.add(CarStreamType, "car-123", 1, CarProducedEvent(vin = "123", producer = 1, make = "kia", model = "rio"))
-        storage.add(CarStreamType, "car-456", 1, CarProducedEvent(vin = "456", producer = 1, make = "kia", model = "rio"))
-        storage.add(CarStreamType, "car-123", 2, CarSoldEvent(seller = 1, buyer = 2, 2500.00f))
+        storage.add(CarStreamType, car1StreamId, 1, CarProducedEvent(vin = "123", producer = 1, make = "kia", model = "rio"))
+        storage.add(CarStreamType, car2StreamId, 1, CarProducedEvent(vin = "456", producer = 1, make = "kia", model = "rio"))
+        storage.add(CarStreamType, car1StreamId, 2, CarSoldEvent(seller = 1, buyer = 2, 2500.00f))
 
         // when
         val eventStore = factory.newEventStore(storage)
@@ -49,7 +49,7 @@ public open class LoadStreamTest<R : Storage, S : EventStore, F : StreamTestFact
             val eventEnvelopes = eventStore
                 .withStreamType(CarStreamType)
                 .loadStream(
-                    streamId = "car-123",
+                    streamId = car1StreamId,
                     sinceVersion = sinceVersion,
                 )
                 .unwrap()
@@ -59,7 +59,7 @@ public open class LoadStreamTest<R : Storage, S : EventStore, F : StreamTestFact
             assertEquals(
                 expected = EventEnvelope(
                     streamType = CarStreamType,
-                    streamId = "car-123",
+                    streamId = car1StreamId,
                     version = 2,
                     position = 3,
                     metadata = emptyMap(),

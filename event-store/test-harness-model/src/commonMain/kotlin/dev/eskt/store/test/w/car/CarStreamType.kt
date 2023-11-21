@@ -1,5 +1,7 @@
 package dev.eskt.store.test.w.car
 
+import com.benasher44.uuid.Uuid
+import com.benasher44.uuid.uuidFrom
 import dev.eskt.store.api.BinarySerializableStreamType
 import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
@@ -10,21 +12,21 @@ import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalSerializationApi::class)
 public object CarStreamType :
-    StreamType<String, CarEvent>,
-    BinarySerializableStreamType<String, CarEvent>,
-    StringSerializableStreamType<String, CarEvent> {
+    StreamType<Uuid, CarEvent>,
+    BinarySerializableStreamType<Uuid, CarEvent>,
+    StringSerializableStreamType<Uuid, CarEvent> {
 
     private val eventSerializer = CarEvent.serializer()
 
     override val id: String = "Car"
 
-    override val stringIdSerializer: Serializer<String, String> = object : Serializer<String, String> {
-        override fun serialize(obj: String): String {
-            return obj
+    override val stringIdSerializer: Serializer<Uuid, String> = object : Serializer<Uuid, String> {
+        override fun serialize(obj: Uuid): String {
+            return obj.toString()
         }
 
-        override fun deserialize(payload: String): String {
-            return payload
+        override fun deserialize(payload: String): Uuid {
+            return uuidFrom(payload)
         }
     }
 
