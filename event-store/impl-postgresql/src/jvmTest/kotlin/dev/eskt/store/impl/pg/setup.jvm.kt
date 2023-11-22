@@ -2,7 +2,6 @@ package dev.eskt.store.impl.pg
 
 import com.zaxxer.hikari.HikariDataSource
 
-@OptIn(ExperimentalStdlibApi::class)
 internal actual fun ConnectionConfig.dataSource(closeables: MutableList<AutoCloseable>): DataSource {
     return HikariDataSource(toHikariConfig()).also { closeables.add(it) }
 }
@@ -33,7 +32,7 @@ internal actual fun ConnectionConfig.create(eventTable: String) {
                 (
                     position    bigserial NOT NULL unique,
                     stream_type text      NOT NULL,
-                    stream_id   text      NOT NULL,
+                    stream_id   uuid      NOT NULL,
                     version     int       NOT NULL,
                     payload     jsonb     NOT NULL,
                     metadata    jsonb     NOT NULL,

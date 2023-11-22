@@ -34,7 +34,7 @@ internal actual class DatabaseAdapter actual constructor(
             val stm = selectEventByStreamIdAndVersionSql(tableInfo.table)
             connection.prepareStatement(stm)
                 .use { ps ->
-                    ps.setString(1, streamId)
+                    ps.setObject(1, streamId, java.sql.Types.OTHER)
                     ps.setInt(2, sinceVersion)
                     ps.setInt(3, limit)
                     ps.executeQuery().use { rs ->
@@ -60,11 +60,12 @@ internal actual class DatabaseAdapter actual constructor(
     }
 
     actual fun persistEntries(entries: List<PostgresqlStorage.DatabaseEntry>, tableInfo: TableInfo) {
+        val singleId = entries.distinctBy { it.id }.single().id
         val expectedVersion = entries[0].version - 1
         dataSource.connection.use { connection ->
             connection.prepareStatement(selectMaxVersionByStreamIdSql(tableInfo.table))
                 .use { ps ->
-                    ps.setString(1, entries[0].id)
+                    ps.setObject(1, singleId, java.sql.Types.OTHER)
                     ps.executeQuery().use { rs ->
                         rs.next()
                         val currentVersion = rs.getInt(1)
@@ -80,7 +81,7 @@ internal actual class DatabaseAdapter actual constructor(
             connection.prepareStatement(insertEventSql(tableInfo.table)).use { ps ->
                 entries.forEach { entry ->
                     ps.setString(1, entry.type)
-                    ps.setString(2, entry.id)
+                    ps.setObject(2, entry.id, java.sql.Types.OTHER)
                     ps.setInt(3, entry.version)
                     ps.setObject(4, entry.eventPayload, java.sql.Types.OTHER)
                     ps.setObject(5, entry.metadataPayload, java.sql.Types.OTHER)
