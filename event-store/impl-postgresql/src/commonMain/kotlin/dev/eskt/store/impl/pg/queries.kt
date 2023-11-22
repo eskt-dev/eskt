@@ -17,7 +17,7 @@ internal fun selectEventByStreamIdAndVersionSql(eventTable: String) = """
     limit ?;
     """.trimIndent()
 
-internal fun insertEventSql(eventTable: String, columnType: String) = """
+internal fun insertEventSql(eventTable: String) = """
     insert into $eventTable (stream_type, stream_id, version, payload, metadata)
-    values (?, ?, ?, ?::$columnType, ?::$columnType);    
+    values (?, ?, ?, ?, ?);    
     """.trimIndent()

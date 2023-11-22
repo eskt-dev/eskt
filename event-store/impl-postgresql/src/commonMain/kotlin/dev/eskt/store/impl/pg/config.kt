@@ -21,7 +21,6 @@ internal class PostgresqlConfig(
 
     val tableInfo = TableInfo(
         table = eventTable,
-        payloadType = TableInfo.PayloadType.Json,
     )
 }
 
@@ -38,12 +37,7 @@ internal data class ConnectionConfig(
 
 internal data class TableInfo(
     val table: String,
-    val payloadType: PayloadType,
-) {
-    enum class PayloadType {
-        Json,
-    }
-}
+)
 
 public class PostgresqlConfigBuilder(
     private val datasource: DataSource,

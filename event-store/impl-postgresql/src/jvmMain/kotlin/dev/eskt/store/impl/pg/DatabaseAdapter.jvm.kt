@@ -62,10 +62,6 @@ internal actual class DatabaseAdapter actual constructor(
     actual fun persistEntries(entries: List<PostgresqlStorage.DatabaseEntry>, tableInfo: TableInfo) {
         val expectedVersion = entries[0].version - 1
         dataSource.connection.use { connection ->
-            val columnType = when (tableInfo.payloadType) {
-                TableInfo.PayloadType.Json -> "json"
-            }
-
             connection.prepareStatement(selectMaxVersionByStreamIdSql(tableInfo.table))
                 .use { ps ->
                     ps.setString(1, entries[0].id)
@@ -81,13 +77,13 @@ internal actual class DatabaseAdapter actual constructor(
                     }
                 }
 
-            connection.prepareStatement(insertEventSql(tableInfo.table, columnType)).use { ps ->
+            connection.prepareStatement(insertEventSql(tableInfo.table)).use { ps ->
                 entries.forEach { entry ->
                     ps.setString(1, entry.type)
                     ps.setString(2, entry.id)
                     ps.setInt(3, entry.version)
-                    ps.setString(4, entry.eventPayload)
-                    ps.setString(5, entry.metadataPayload)
+                    ps.setObject(4, entry.eventPayload, java.sql.Types.OTHER)
+                    ps.setObject(5, entry.metadataPayload, java.sql.Types.OTHER)
                     ps.addBatch()
                 }
                 try {
