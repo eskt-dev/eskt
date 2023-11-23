@@ -10,13 +10,17 @@ kotlin {
 
     jvm()
     linuxX64()
-    linuxArm64()
+//    linuxArm64()
     macosX64()
     macosArm64()
 
     sourceSets {
         commonMain {
             dependencies {
+                api("dev.eskt:api")
+                api("dev.eskt:hex-arch-ports")
+                api("dev.eskt:test-harness-model")
+                api("com.benasher44:uuid:0.8.2")
             }
         }
     }

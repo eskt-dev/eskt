@@ -4,8 +4,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class SpringWebfluxR2dbcApplication
+class Application
 
 fun main(args: Array<String>) {
-	runApplication<SpringWebfluxR2dbcApplication>(*args)
+	runApplication<Application>(*args)
 }
