@@ -6,6 +6,19 @@ internal expect class DatabaseAdapter(dataSource: DataSource) {
         tableInfo: TableInfo,
     ): PostgresqlStorage.DatabaseEntry
 
+    fun getEntryBatch(
+        sincePosition: Long,
+        batchSize: Int,
+        tableInfo: TableInfo,
+    ): List<PostgresqlStorage.DatabaseEntry>
+
+    fun getEntryBatch(
+        sincePosition: Long,
+        batchSize: Int,
+        type: String,
+        tableInfo: TableInfo,
+    ): List<PostgresqlStorage.DatabaseEntry>
+
     fun getEntriesByStreamIdAndVersion(
         streamId: String,
         sinceVersion: Int,

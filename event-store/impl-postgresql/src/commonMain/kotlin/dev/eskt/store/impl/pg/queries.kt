@@ -1,17 +1,32 @@
 package dev.eskt.store.impl.pg
 
 internal fun selectEventByPositionSql(eventTable: String) = """
-    select position, stream_type, stream_id, version, payload, metadata from $eventTable
+    select position, stream_type, stream_id, version, payload, metadata 
+    from $eventTable
     where position = ?;
     """.trimIndent()
 
+internal fun selectEventSincePositionSql(eventTable: String) = """
+    select position, stream_type, stream_id, version, payload, metadata 
+    from $eventTable
+    where position > ?;
+    """.trimIndent()
+
+internal fun selectEventByTypeSincePositionSql(eventTable: String) = """
+    select position, stream_type, stream_id, version, payload, metadata 
+    from $eventTable
+    where stream_type = ? and position > ?;
+    """.trimIndent()
+
 internal fun selectMaxVersionByStreamIdSql(eventTable: String) = """
-    select max(version) from $eventTable
+    select max(version) 
+    from $eventTable
     where stream_id = ?;
     """.trimIndent()
 
 internal fun selectEventByStreamIdAndVersionSql(eventTable: String) = """
-    select position, stream_type, stream_id, version, payload, metadata from $eventTable
+    select position, stream_type, stream_id, version, payload, metadata 
+    from $eventTable
     where stream_id = ? and version > ?
     order by version asc
     limit ?;
