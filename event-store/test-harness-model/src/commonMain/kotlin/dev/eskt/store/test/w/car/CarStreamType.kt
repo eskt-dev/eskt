@@ -11,7 +11,7 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalSerializationApi::class)
-public object CarStreamType :
+public data object CarStreamType :
     StreamType<Uuid, CarEvent>,
     BinarySerializableStreamType<Uuid, CarEvent>,
     StringSerializableStreamType<Uuid, CarEvent> {
