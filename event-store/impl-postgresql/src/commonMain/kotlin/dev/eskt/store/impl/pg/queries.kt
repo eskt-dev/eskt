@@ -9,13 +9,17 @@ internal fun selectEventByPositionSql(eventTable: String) = """
 internal fun selectEventSincePositionSql(eventTable: String) = """
     select position, stream_type, stream_id, version, payload, metadata 
     from $eventTable
-    where position > ?;
+    where position > ?
+    order by position asc
+    limit ?;
     """.trimIndent()
 
 internal fun selectEventByTypeSincePositionSql(eventTable: String) = """
     select position, stream_type, stream_id, version, payload, metadata 
     from $eventTable
-    where stream_type = ? and position > ?;
+    where stream_type = ? and position > ?
+    order by position asc
+    limit ?;
     """.trimIndent()
 
 internal fun selectMaxVersionByStreamIdSql(eventTable: String) = """
