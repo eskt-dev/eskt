@@ -33,6 +33,7 @@ internal actual class DatabaseAdapter actual constructor(
             connection.prepareStatement(selectEventSincePositionSql(tableInfo.table))
                 .use { ps ->
                     ps.setLong(1, sincePosition)
+                    ps.setInt(2, batchSize)
                     ps.executeQuery().use { rs ->
                         return buildList {
                             while (rs.next()) {
@@ -55,6 +56,7 @@ internal actual class DatabaseAdapter actual constructor(
                 .use { ps ->
                     ps.setString(1, type)
                     ps.setLong(2, sincePosition)
+                    ps.setInt(3, batchSize)
                     ps.executeQuery().use { rs ->
                         return buildList {
                             while (rs.next()) {
