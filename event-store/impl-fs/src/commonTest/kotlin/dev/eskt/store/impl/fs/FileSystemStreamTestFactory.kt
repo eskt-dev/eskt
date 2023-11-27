@@ -3,6 +3,7 @@ package dev.eskt.store.impl.fs
 import dev.eskt.store.impl.common.binary.serialization.DefaultEventMetadataSerializer
 import dev.eskt.store.test.StreamTestFactory
 import dev.eskt.store.test.w.car.CarStreamType
+import dev.eskt.store.test.w.driver.DriverStreamType
 
 internal class FileSystemStreamTestFactory : StreamTestFactory<FileSystemStorage, FileSystemEventStore>() {
     private val config = FileSystemConfig(
@@ -10,6 +11,7 @@ internal class FileSystemStreamTestFactory : StreamTestFactory<FileSystemStorage
         eventMetadataSerializer = DefaultEventMetadataSerializer,
         registeredTypes = listOf(
             CarStreamType,
+            DriverStreamType,
         ),
     )
 

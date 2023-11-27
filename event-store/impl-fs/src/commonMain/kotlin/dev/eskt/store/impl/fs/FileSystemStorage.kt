@@ -152,6 +152,38 @@ public class FileSystemStorage internal constructor(
         }
     }
 
+    override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
+        return loadEventBatchInternal(sincePosition, batchSize, null)
+    }
+
+    override fun <I, E> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<I, E>): List<EventEnvelope<I, E>> {
+        return loadEventBatchInternal(sincePosition, batchSize, streamType)
+    }
+
+    private fun <I, E> loadEventBatchInternal(sincePosition: Long, batchSize: Int, streamType: StreamType<I, E>?): List<EventEnvelope<I, E>> {
+        if (!fs.exists(posPath)) {
+            throw IllegalStateException("Event store is empty, file $posPath does not exist")
+        }
+
+        fs.openReadOnly(posPath).use { posHandle ->
+            val posSource = posHandle.source(sincePosition * POSITION_ENTRY_SIZE_IN_BYTES).buffer()
+            fs.openReadOnly(walPath).use { walHandle ->
+                var added = 0
+                return buildList {
+                    while (!posSource.exhausted()) {
+                        val addr = posSource.readLong()
+                        val envelope = walHandle.readEventEnvelopeAt<I, E>(addr, streamTypeFinder = { id -> registeredTypes[id].asBinaryStreamType() })
+                        if (streamType == null || streamType == envelope.streamType) {
+                            add(envelope)
+                            added++
+                            if (added == batchSize) break
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     override fun <I, E> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<I, E> {
         val streamPath = basePath / toPathComponent(streamId)
 

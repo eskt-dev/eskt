@@ -24,6 +24,48 @@ internal actual class DatabaseAdapter actual constructor(
         }
     }
 
+    actual fun getEntryBatch(
+        sincePosition: Long,
+        batchSize: Int,
+        tableInfo: TableInfo,
+    ): List<PostgresqlStorage.DatabaseEntry> {
+        dataSource.connection.use { connection ->
+            connection.prepareStatement(selectEventSincePositionSql(tableInfo.table))
+                .use { ps ->
+                    ps.setLong(1, sincePosition)
+                    ps.executeQuery().use { rs ->
+                        return buildList {
+                            while (rs.next()) {
+                                add(rs.databaseEntry())
+                            }
+                        }
+                    }
+                }
+        }
+    }
+
+    actual fun getEntryBatch(
+        sincePosition: Long,
+        batchSize: Int,
+        type: String,
+        tableInfo: TableInfo,
+    ): List<PostgresqlStorage.DatabaseEntry> {
+        dataSource.connection.use { connection ->
+            connection.prepareStatement(selectEventByTypeSincePositionSql(tableInfo.table))
+                .use { ps ->
+                    ps.setString(1, type)
+                    ps.setLong(2, sincePosition)
+                    ps.executeQuery().use { rs ->
+                        return buildList {
+                            while (rs.next()) {
+                                add(rs.databaseEntry())
+                            }
+                        }
+                    }
+                }
+        }
+    }
+
     actual fun getEntriesByStreamIdAndVersion(
         streamId: String,
         sinceVersion: Int,

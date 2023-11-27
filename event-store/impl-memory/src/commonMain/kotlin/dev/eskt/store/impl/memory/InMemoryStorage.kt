@@ -53,9 +53,31 @@ internal class InMemoryStorage(
     }
 
     override fun <I, E> getEventByPosition(position: Long): EventEnvelope<I, E> = events[position.toInt() - 1] as EventEnvelope<I, E>
+    override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
+        return events.asSequence()
+            .drop(sincePositionInt(sincePosition))
+            .take(batchSize)
+            .toList()
+    }
+
+    override fun <I, E> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<I, E>): List<EventEnvelope<I, E>> {
+        return events.asSequence()
+            .drop(sincePositionInt(sincePosition))
+            .filter { it.streamType == streamType }
+            .take(batchSize)
+            .map { it as EventEnvelope<I, E> }
+            .toList()
+    }
 
     override fun <I, E> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<I, E> {
         val eventEnvelopes = eventsByStreamId[streamId as Any] as List<EventEnvelope<I, E>>
         return eventEnvelopes[version - 1]
     }
+
+    private fun sincePositionInt(sincePosition: Long) =
+        if (sincePosition > Int.MAX_VALUE) {
+            throw IllegalStateException("In-memory implementation can't really support more than Int.MAX_VALUE entries")
+        } else {
+            sincePosition.toInt()
+        }
 }

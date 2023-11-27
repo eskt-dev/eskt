@@ -44,6 +44,25 @@ internal class PostgresqlStorage(
         return entry.toEventEnvelope()
     }
 
+    override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
+        val entries = databaseAdapter.getEntryBatch(
+            sincePosition = sincePosition,
+            batchSize = batchSize,
+            tableInfo = config.tableInfo,
+        )
+        return entries.map { entry -> entry.toEventEnvelope() }
+    }
+
+    override fun <I, E> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<I, E>): List<EventEnvelope<I, E>> {
+        val entries = databaseAdapter.getEntryBatch(
+            sincePosition = sincePosition,
+            batchSize = batchSize,
+            type = streamType.id,
+            tableInfo = config.tableInfo,
+        )
+        return entries.map { entry -> entry.toEventEnvelope() }
+    }
+
     override fun <I, E> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<I, E> {
         val entry = databaseAdapter.getEntriesByStreamIdAndVersion(
             streamId = streamId.toString(),
