@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class CarController(
     val carProduction: CarProduction,
-    val carCountReadModelRepository: MakeModelCarCountRepository,
+    val carCountRepository: MakeModelCarCountRepository,
 ) {
 
     @GetMapping("/car-count/summary")
     fun getCarCountSummary(): List<CarCount> {
-        return carCountReadModelRepository.listAll().map {
+        return carCountRepository.listAll().map {
             CarCount(
                 make = it.make,
                 model = it.model,
