@@ -15,7 +15,7 @@ interface MakeModelCarCountJpaRepository : JpaRepository<MakeModelCarCountEntity
     }
 
     override fun save(carCount: MakeModelCarCount) {
-        save(MakeModelCarCountEntity(MakeModelCarCountEntity.Id(make = carCount.make, model = carCount.model), count = carCount.count))
+        save(carCount.toEntity())
     }
 
     private fun MakeModelCarCountEntity.toDomain() = MakeModelCarCount(
@@ -23,4 +23,11 @@ interface MakeModelCarCountJpaRepository : JpaRepository<MakeModelCarCountEntity
         model = id.model,
         count = count,
     )
+
+    private fun MakeModelCarCount.toEntity(): MakeModelCarCountEntity {
+        return MakeModelCarCountEntity(
+            id = MakeModelCarCountEntity.Id(make = make, model = model),
+            count = count,
+        )
+    }
 }
