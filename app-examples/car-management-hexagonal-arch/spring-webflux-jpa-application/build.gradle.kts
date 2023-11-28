@@ -29,6 +29,7 @@ dependencies {
     // project
     implementation(project(":domain"))
     implementation("dev.eskt:impl-postgresql")
+    implementation("dev.eskt:hex-arch-adapters-spring6")
 
     // runtime
 	runtimeOnly("com.h2database:h2")

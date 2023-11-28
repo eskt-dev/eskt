@@ -23,5 +23,10 @@ kotlin {
                 api("com.benasher44:uuid:0.8.2")
             }
         }
+        commonTest {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
     }
 }

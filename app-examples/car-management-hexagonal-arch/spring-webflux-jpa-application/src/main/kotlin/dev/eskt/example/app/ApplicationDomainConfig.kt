@@ -1,5 +1,6 @@
 package dev.eskt.example.app
 
+import dev.eskt.example.domain.EventListener
 import dev.eskt.example.domain.UseCase
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.FilterType
             type = FilterType.ANNOTATION,
             classes = [
                 UseCase::class,
+                EventListener::class,
             ],
         ),
     ],

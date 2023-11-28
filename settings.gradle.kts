@@ -24,3 +24,5 @@ include(":event-store:test-harness")
 include(":event-store:test-harness-model")
 
 include(":hex-arch-ports")
+include(":hex-arch-adapters-common")
+include(":hex-arch-adapters-spring6")
