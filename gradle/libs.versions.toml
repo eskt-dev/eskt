@@ -3,6 +3,8 @@
 kotlinx-coroutines = "1.7.2"
 kotlinx-serialization = "1.5.1"
 kotlinx-atomicfu = "0.21.0"
+slf4j = "1.7.36"
+spring6 = "6.0.14"
 uuid = "0.8.2"
 okio = "3.5.0"
 postgresql-jdbc = "42.6.0"
@@ -23,6 +25,12 @@ uuid = { group = "com.benasher44", name = "uuid", version.ref = "uuid" }
 
 okio-core = { group = "com.squareup.okio", name = "okio", version.ref = "okio" }
 okio-node = { group = "com.squareup.okio", name = "okio-nodefilesystem", version.ref = "okio" }
+
+slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
+
+spring6-context = { group = "org.springframework", name = "spring-context", version.ref = "spring6" }
+spring6-beans = { group = "org.springframework", name = "spring-beans", version.ref = "spring6" }
+spring6-tx = { group = "org.springframework", name = "spring-tx", version.ref = "spring6" }
 
 postgresql-jdbc = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql-jdbc" }
 hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikaricp" }

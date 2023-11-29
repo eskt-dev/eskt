@@ -11,9 +11,11 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":event-store:api"))
+                api(project(":hex-arch-ports"))
+                api(libs.kotlinx.coroutines.core)
             }
         }
     }
 }
 
-setupPublishing("hex-arch-ports")
+setupPublishing("hex-arch-adapters-common")
