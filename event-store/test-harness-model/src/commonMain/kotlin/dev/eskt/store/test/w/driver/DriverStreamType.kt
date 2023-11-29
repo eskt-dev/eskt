@@ -12,9 +12,9 @@ import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalSerializationApi::class)
 public data object DriverStreamType :
-    StreamType<Uuid, DriverEvent>,
-    BinarySerializableStreamType<Uuid, DriverEvent>,
-    StringSerializableStreamType<Uuid, DriverEvent> {
+    StreamType<DriverEvent, Uuid>,
+    BinarySerializableStreamType<DriverEvent, Uuid>,
+    StringSerializableStreamType<DriverEvent, Uuid> {
 
     private val eventSerializer = DriverEvent.serializer()
 

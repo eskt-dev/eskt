@@ -16,9 +16,9 @@ class CarCountEventListener(
     private val makeModelCarRepository: MakeModelCarRepository,
 ) : SingleStreamTypeEventListener<CarEvent, Uuid> {
     override val id: String = "car-count-read-model"
-    override val streamType: StreamType<Uuid, CarEvent> = CarStreamType
+    override val streamType: StreamType<CarEvent, Uuid> = CarStreamType
 
-    override fun listen(envelope: EventEnvelope<Uuid, CarEvent>) {
+    override fun listen(envelope: EventEnvelope<CarEvent, Uuid>) {
         when (val event = envelope.event) {
             is CarProducedEvent -> {
                 val car = makeModelCarRepository.find(envelope.streamId)

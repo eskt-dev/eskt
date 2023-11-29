@@ -1,7 +1,7 @@
 package dev.eskt.store.api
 
-public interface StreamTypeHandler<I, E> {
-    public val streamType: StreamType<I, E>
+public interface StreamTypeHandler<E, I> {
+    public val streamType: StreamType<E, I>
 
     /**
      * Load events from an event stream.
@@ -9,7 +9,7 @@ public interface StreamTypeHandler<I, E> {
     public fun loadStream(
         streamId: I,
         sinceVersion: Int = 0,
-    ): List<EventEnvelope<I, E>>
+    ): List<EventEnvelope<E, I>>
 
     /**
      * Append new events into an event stream.

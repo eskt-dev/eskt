@@ -14,9 +14,9 @@ class CarProductionNotificationProcess(
     private val notifier: CarProductionNotifier,
 ) : SingleStreamTypeEventListener<CarEvent, Uuid> {
     override val id: String = "car-production-notification-process"
-    override val streamType: StreamType<Uuid, CarEvent> = CarStreamType
+    override val streamType: StreamType<CarEvent, Uuid> = CarStreamType
 
-    override fun listen(envelope: EventEnvelope<Uuid, CarEvent>) {
+    override fun listen(envelope: EventEnvelope<CarEvent, Uuid>) {
         when (val event = envelope.event) {
             is CarProducedEvent -> notifier.notify(vin = event.vin, make = event.make, model = event.model)
             else -> {}

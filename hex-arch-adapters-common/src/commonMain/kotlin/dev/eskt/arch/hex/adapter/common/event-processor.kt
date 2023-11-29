@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 
 public suspend inline fun <E, I> EventStore.singleStreamTypeEventFlow(
-    streamType: StreamType<I, E>,
+    streamType: StreamType<E, I>,
     sincePosition: Long,
     batchSize: Int,
-): Flow<EventEnvelope<I, E>> = channelFlow {
+): Flow<EventEnvelope<E, I>> = channelFlow {
     var lastPosition = sincePosition
     while (true) {
         val eventBatch = loadEventBatch(lastPosition, batchSize, streamType = streamType)

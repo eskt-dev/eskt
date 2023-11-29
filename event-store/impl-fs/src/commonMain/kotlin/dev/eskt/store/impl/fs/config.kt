@@ -20,7 +20,7 @@ public class FileSystemConfigBuilder(
     private val registeredTypes = mutableListOf<StreamType<*, *>>()
     private var eventMetadataSerializer: Serializer<EventMetadata, ByteArray> = DefaultEventMetadataSerializer
 
-    public fun <I, E, T> registerStreamType(streamType: T) where T : StreamType<I, E>, T : BinarySerializableStreamType<I, E> {
+    public fun <E, I, T> registerStreamType(streamType: T) where T : StreamType<E, I>, T : BinarySerializableStreamType<E, I> {
         registeredTypes += streamType as BinarySerializableStreamType<*, *>
     }
 

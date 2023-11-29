@@ -40,6 +40,9 @@ public class EventListenerExecutorService(
     private var stopped = false
 
     private fun init() {
+
+        // TODO enforce uniqueness of the ids of the listeners
+
         logger.info("Starting listener processes for ${eventListeners.size} listeners...")
         eventListeners.forEach { genericListener ->
             @Suppress("UNCHECKED_CAST")

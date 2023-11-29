@@ -9,7 +9,7 @@ internal class InMemoryConfig(
 public class InMemoryConfigBuilder {
     private val registeredTypes = mutableListOf<StreamType<*, *>>()
 
-    public fun <I, E, T> registerStreamType(streamType: T) where T : StreamType<I, E> {
+    public fun <E, I, T> registerStreamType(streamType: T) where T : StreamType<E, I> {
         registeredTypes += streamType
     }
 

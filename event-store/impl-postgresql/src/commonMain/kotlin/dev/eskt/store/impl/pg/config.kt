@@ -15,7 +15,7 @@ internal class PostgresqlConfig(
     private val registeredTypeById: Map<String, StreamType<*, *>> by lazy { registeredTypes.associateBy { it.id } }
 
     @Suppress("UNCHECKED_CAST")
-    fun <I, E, S : StreamType<I, E>> streamType(id: String): S {
+    fun <I, E, S : StreamType<E, I>> streamType(id: String): S {
         return registeredTypeById[id] as S? ?: throw IllegalStateException("Invalid stream type id $id")
     }
 
@@ -46,8 +46,8 @@ public class PostgresqlConfigBuilder(
     private val registeredTypes = mutableListOf<StreamType<*, *>>()
     private var eventMetadataSerializer: Serializer<EventMetadata, String> = DefaultEventMetadataSerializer
 
-    public fun <I, E, T> registerStreamType(streamType: T)
-    where T : StreamType<I, E>, T : StringSerializableStreamType<I, E> {
+    public fun <E, I, T> registerStreamType(streamType: T)
+    where T : StreamType<E, I>, T : StringSerializableStreamType<E, I> {
         registeredTypes += streamType as StringSerializableStreamType<*, *>
     }
 
