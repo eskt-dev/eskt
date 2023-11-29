@@ -5,6 +5,6 @@ import dev.eskt.store.api.StreamType
 
 public interface SingleStreamTypeEventListener<E, I> {
     public val id: String
-    public val streamType: StreamType<I, E>
-    public fun listen(envelope: EventEnvelope<I, E>)
+    public val streamType: StreamType<E, I>
+    public fun listen(envelope: EventEnvelope<E, I>)
 }

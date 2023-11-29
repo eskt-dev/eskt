@@ -1,5 +1,5 @@
 package dev.eskt.store.api
 
-public interface StreamType<I, E> {
+public interface StreamType<E, I> {
     public val id: String
 }

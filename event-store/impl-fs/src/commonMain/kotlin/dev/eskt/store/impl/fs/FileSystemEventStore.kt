@@ -18,11 +18,11 @@ public class FileSystemEventStore internal constructor(
         return storage.loadEventBatch(sincePosition, batchSize)
     }
 
-    override fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<I, E>): List<EventEnvelope<I, E>> {
+    override fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<E, I>): List<EventEnvelope<E, I>> {
         return storage.loadEventBatch(sincePosition, batchSize, streamType)
     }
 
-    override fun <I, E> withStreamType(type: StreamType<I, E>): dev.eskt.store.api.StreamTypeHandler<I, E> {
+    override fun <E, I> withStreamType(type: StreamType<E, I>): dev.eskt.store.api.StreamTypeHandler<E, I> {
         return dev.eskt.store.impl.common.base.StreamTypeHandler(type, storage)
     }
 }

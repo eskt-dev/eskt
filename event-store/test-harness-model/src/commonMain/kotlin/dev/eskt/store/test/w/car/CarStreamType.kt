@@ -12,9 +12,9 @@ import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalSerializationApi::class)
 public data object CarStreamType :
-    StreamType<Uuid, CarEvent>,
-    BinarySerializableStreamType<Uuid, CarEvent>,
-    StringSerializableStreamType<Uuid, CarEvent> {
+    StreamType<CarEvent, Uuid>,
+    BinarySerializableStreamType<CarEvent, Uuid>,
+    StringSerializableStreamType<CarEvent, Uuid> {
 
     private val eventSerializer = CarEvent.serializer()
 

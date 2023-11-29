@@ -8,11 +8,11 @@ import dev.eskt.store.api.StreamVersionMismatchException
 import dev.eskt.store.storage.api.Storage
 import dev.eskt.store.storage.api.StorageVersionMismatchException
 
-public class StreamTypeHandler<I, E>(
-    override val streamType: StreamType<I, E>,
+public class StreamTypeHandler<E, I>(
+    override val streamType: StreamType<E, I>,
     private val storage: Storage,
-) : StreamTypeHandler<I, E> {
-    override fun loadStream(streamId: I, sinceVersion: Int): List<EventEnvelope<I, E>> {
+) : StreamTypeHandler<E, I> {
+    override fun loadStream(streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
         return storage.getStreamEvents(streamId, sinceVersion)
     }
 

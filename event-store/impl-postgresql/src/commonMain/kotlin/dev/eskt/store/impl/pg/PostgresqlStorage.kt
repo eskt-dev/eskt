@@ -14,9 +14,9 @@ internal class PostgresqlStorage(
 
     private val databaseAdapter = DatabaseAdapter(config.dataSource)
 
-    override fun <I, E> add(streamType: StreamType<I, E>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
+    override fun <E, I> add(streamType: StreamType<E, I>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
         if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
-        streamType as StringSerializableStreamType<I, E>
+        streamType as StringSerializableStreamType<E, I>
         val entries = events.map {
             DatabaseEntry(
                 type = streamType.id,
@@ -30,7 +30,7 @@ internal class PostgresqlStorage(
         databaseAdapter.persistEntries(entries, config.tableInfo)
     }
 
-    override fun <I, E> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<I, E>> {
+    override fun <E, I> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
         val entries = databaseAdapter.getEntriesByStreamIdAndVersion(
             streamId = streamId.toString(),
             sinceVersion = sinceVersion,
@@ -39,7 +39,7 @@ internal class PostgresqlStorage(
         return entries.map { entry -> entry.toEventEnvelope() }
     }
 
-    override fun <I, E> getEventByPosition(position: Long): EventEnvelope<I, E> {
+    override fun <E, I> getEventByPosition(position: Long): EventEnvelope<E, I> {
         val entry = databaseAdapter.getEntryByPosition(position, config.tableInfo)
         return entry.toEventEnvelope()
     }
@@ -53,7 +53,7 @@ internal class PostgresqlStorage(
         return entries.map { entry -> entry.toEventEnvelope() }
     }
 
-    override fun <I, E> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<I, E>): List<EventEnvelope<I, E>> {
+    override fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<E, I>): List<EventEnvelope<E, I>> {
         val entries = databaseAdapter.getEntryBatch(
             sincePosition = sincePosition,
             batchSize = batchSize,
@@ -63,7 +63,7 @@ internal class PostgresqlStorage(
         return entries.map { entry -> entry.toEventEnvelope() }
     }
 
-    override fun <I, E> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<I, E> {
+    override fun <E, I> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<E, I> {
         val entry = databaseAdapter.getEntriesByStreamIdAndVersion(
             streamId = streamId.toString(),
             sinceVersion = version - 1,
@@ -73,8 +73,8 @@ internal class PostgresqlStorage(
         return entry.toEventEnvelope()
     }
 
-    private fun <E, I> DatabaseEntry.toEventEnvelope(): EventEnvelope<I, E> {
-        val streamType = config.streamType<I, E, StringSerializableStreamType<I, E>>(type)
+    private fun <E, I> DatabaseEntry.toEventEnvelope(): EventEnvelope<E, I> {
+        val streamType = config.streamType<E, I, StringSerializableStreamType<E, I>>(type)
         return EventEnvelope(
             streamType = streamType,
             streamId = streamType.stringIdSerializer.deserialize(id),

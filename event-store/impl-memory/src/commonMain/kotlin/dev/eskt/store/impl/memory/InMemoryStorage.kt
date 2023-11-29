@@ -19,14 +19,14 @@ internal class InMemoryStorage(
 
     private val writeLock = reentrantLock()
 
-    override fun <I, E> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<I, E>> {
+    override fun <E, I> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
         return events
             .filter { it.streamId == streamId }
             .drop(sinceVersion)
-            .map { it as EventEnvelope<I, E> }
+            .map { it as EventEnvelope<E, I> }
     }
 
-    override fun <I, E> add(streamType: StreamType<I, E>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
+    override fun <E, I> add(streamType: StreamType<E, I>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
         if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
         writeLock.withLock {
             val streamEvents = eventsByStreamId[streamId as Any]
@@ -52,7 +52,7 @@ internal class InMemoryStorage(
         }
     }
 
-    override fun <I, E> getEventByPosition(position: Long): EventEnvelope<I, E> = events[position.toInt() - 1] as EventEnvelope<I, E>
+    override fun <E, I> getEventByPosition(position: Long): EventEnvelope<E, I> = events[position.toInt() - 1] as EventEnvelope<E, I>
     override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
         return events.asSequence()
             .drop(sincePositionInt(sincePosition))
@@ -60,17 +60,17 @@ internal class InMemoryStorage(
             .toList()
     }
 
-    override fun <I, E> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<I, E>): List<EventEnvelope<I, E>> {
+    override fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<E, I>): List<EventEnvelope<E, I>> {
         return events.asSequence()
             .drop(sincePositionInt(sincePosition))
             .filter { it.streamType == streamType }
             .take(batchSize)
-            .map { it as EventEnvelope<I, E> }
+            .map { it as EventEnvelope<E, I> }
             .toList()
     }
 
-    override fun <I, E> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<I, E> {
-        val eventEnvelopes = eventsByStreamId[streamId as Any] as List<EventEnvelope<I, E>>
+    override fun <E, I> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<E, I> {
+        val eventEnvelopes = eventsByStreamId[streamId as Any] as List<EventEnvelope<E, I>>
         return eventEnvelopes[version - 1]
     }
 

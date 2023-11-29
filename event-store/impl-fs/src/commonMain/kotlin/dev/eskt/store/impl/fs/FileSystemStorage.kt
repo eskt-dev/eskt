@@ -40,9 +40,9 @@ public class FileSystemStorage internal constructor(
         // TODO implement wal -> index sync check
     }
 
-    override fun <I, E> add(streamType: StreamType<I, E>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
+    override fun <E, I> add(streamType: StreamType<E, I>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
         if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
-        streamType as BinarySerializableStreamType<I, E>
+        streamType as BinarySerializableStreamType<E, I>
 
         val streamPath = basePath / toPathComponent(streamId)
         fs.createDirectories(streamPath.parent!!)
@@ -117,7 +117,7 @@ public class FileSystemStorage internal constructor(
         }
     }
 
-    override fun <I, E> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<I, E>> {
+    override fun <E, I> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
         val streamPath = basePath / toPathComponent(streamId)
 
         if (!fs.exists(streamPath)) {
@@ -130,7 +130,7 @@ public class FileSystemStorage internal constructor(
                 return buildList {
                     while (!streamSource.exhausted()) {
                         val addr = streamSource.readLong()
-                        val envelope = walHandle.readEventEnvelopeAt<I, E>(addr, streamTypeFinder = { id -> registeredTypes[id].asBinaryStreamType() })
+                        val envelope = walHandle.readEventEnvelopeAt<E, I>(addr, streamTypeFinder = { id -> registeredTypes[id].asBinaryStreamType() })
                         add(envelope)
                     }
                 }
@@ -138,7 +138,7 @@ public class FileSystemStorage internal constructor(
         }
     }
 
-    override fun <I, E> getEventByPosition(position: Long): EventEnvelope<I, E> {
+    override fun <E, I> getEventByPosition(position: Long): EventEnvelope<E, I> {
         if (!fs.exists(posPath)) {
             throw IllegalStateException("Event store is empty, file $posPath does not exist")
         }
@@ -156,11 +156,11 @@ public class FileSystemStorage internal constructor(
         return loadEventBatchInternal(sincePosition, batchSize, null)
     }
 
-    override fun <I, E> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<I, E>): List<EventEnvelope<I, E>> {
+    override fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<E, I>): List<EventEnvelope<E, I>> {
         return loadEventBatchInternal(sincePosition, batchSize, streamType)
     }
 
-    private fun <I, E> loadEventBatchInternal(sincePosition: Long, batchSize: Int, streamType: StreamType<I, E>?): List<EventEnvelope<I, E>> {
+    private fun <E, I> loadEventBatchInternal(sincePosition: Long, batchSize: Int, streamType: StreamType<E, I>?): List<EventEnvelope<E, I>> {
         if (!fs.exists(posPath)) {
             throw IllegalStateException("Event store is empty, file $posPath does not exist")
         }
@@ -172,7 +172,7 @@ public class FileSystemStorage internal constructor(
                 return buildList {
                     while (!posSource.exhausted()) {
                         val addr = posSource.readLong()
-                        val envelope = walHandle.readEventEnvelopeAt<I, E>(addr, streamTypeFinder = { id -> registeredTypes[id].asBinaryStreamType() })
+                        val envelope = walHandle.readEventEnvelopeAt<E, I>(addr, streamTypeFinder = { id -> registeredTypes[id].asBinaryStreamType() })
                         if (streamType == null || streamType == envelope.streamType) {
                             add(envelope)
                             added++
@@ -184,7 +184,7 @@ public class FileSystemStorage internal constructor(
         }
     }
 
-    override fun <I, E> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<I, E> {
+    override fun <E, I> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<E, I> {
         val streamPath = basePath / toPathComponent(streamId)
 
         if (!fs.exists(streamPath)) {
@@ -200,10 +200,10 @@ public class FileSystemStorage internal constructor(
         }
     }
 
-    private fun <I, E> FileHandle.readEventEnvelopeAt(
+    private fun <E, I> FileHandle.readEventEnvelopeAt(
         addr: Long,
-        streamTypeFinder: (typeId: String) -> BinarySerializableStreamType<I, E>,
-    ): EventEnvelope<I, E> {
+        streamTypeFinder: (typeId: String) -> BinarySerializableStreamType<E, I>,
+    ): EventEnvelope<E, I> {
         val walBuffer = source(addr).buffer()
         val entrySize = walBuffer.readInt()
         val walEntryByteArray = walBuffer.readByteArray(entrySize.toLong())
@@ -228,8 +228,8 @@ public class FileSystemStorage internal constructor(
     }
 
     @Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
-    private inline fun <I, E> StreamType<*, *>?.asBinaryStreamType(): BinarySerializableStreamType<I, E> {
-        return this as BinarySerializableStreamType<I, E>
+    private inline fun <E, I> StreamType<*, *>?.asBinaryStreamType(): BinarySerializableStreamType<E, I> {
+        return this as BinarySerializableStreamType<E, I>
     }
 
     @Serializable

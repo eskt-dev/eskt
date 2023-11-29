@@ -1,6 +1,6 @@
 package dev.eskt.store.api
 
-public interface StringSerializableStreamType<I, E> : StreamType<I, E> {
+public interface StringSerializableStreamType<E, I> : StreamType<E, I> {
     public val stringIdSerializer: Serializer<I, String>
     public val stringEventSerializer: Serializer<E, String>
 }
