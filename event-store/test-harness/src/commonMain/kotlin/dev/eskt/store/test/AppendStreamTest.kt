@@ -1,9 +1,8 @@
 package dev.eskt.store.test
 
-import dev.eskt.store.api.AppendFailure
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventStore
-import dev.eskt.store.api.Result
+import dev.eskt.store.api.StreamVersionMismatchException
 import dev.eskt.store.storage.api.Storage
 import dev.eskt.store.test.w.car.CarProducedEvent
 import dev.eskt.store.test.w.car.CarSoldEvent
@@ -11,6 +10,7 @@ import dev.eskt.store.test.w.car.CarStreamType
 import kotlin.js.JsName
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 @Suppress("DuplicatedCode")
 public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFactory<R, S>>(
@@ -39,7 +39,6 @@ public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFa
                 ),
                 metadata = metadata,
             )
-            .unwrap()
 
         // then
         val eventEnvelope1 = EventEnvelope(CarStreamType, car1StreamId, 1, 1, metadata, event1)
@@ -67,7 +66,6 @@ public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFa
                     event1,
                 ),
             )
-            .unwrap()
 
         // then
         val eventEnvelope1 = EventEnvelope(CarStreamType, car1StreamId, 2, 3, emptyMap(), event1)
@@ -86,19 +84,20 @@ public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFa
         // when
         val event1 = CarSoldEvent(seller = 1, buyer = 3, 2500.00f)
         val eventStore = factory.newEventStore(storage)
-        val result = eventStore
-            .withStreamType(CarStreamType)
-            .appendStream(
-                streamId = car1StreamId,
-                expectedVersion = 1,
-                events = listOf(
-                    event1,
-                ),
-            )
+        val exception = assertFailsWith<StreamVersionMismatchException> {
+            eventStore
+                .withStreamType(CarStreamType)
+                .appendStream(
+                    streamId = car1StreamId,
+                    expectedVersion = 1,
+                    events = listOf(
+                        event1,
+                    ),
+                )
+        }
 
         // then
-        val expected = Result.Failure(AppendFailure.ExpectedVersionMismatch(currentVersion = 2, expectedVersion = 1))
-        assertEquals(expected, result)
+        assertEquals(StreamVersionMismatchException(currentVersion = 2, expectedVersion = 1), exception)
     }
 
     @Test
@@ -111,18 +110,19 @@ public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFa
         // when
         val event1 = CarSoldEvent(seller = 1, buyer = 2, 2500.00f)
         val eventStore = factory.newEventStore(storage)
-        val result = eventStore
-            .withStreamType(CarStreamType)
-            .appendStream(
-                streamId = car1StreamId,
-                expectedVersion = 2, // this would create a gap if accepted
-                events = listOf(
-                    event1,
-                ),
-            )
+        val exception = assertFailsWith<StreamVersionMismatchException> {
+            eventStore
+                .withStreamType(CarStreamType)
+                .appendStream(
+                    streamId = car1StreamId,
+                    expectedVersion = 2, // this would create a gap if accepted
+                    events = listOf(
+                        event1,
+                    ),
+                )
+        }
 
         // then
-        val expected = Result.Failure(AppendFailure.ExpectedVersionMismatch(currentVersion = 1, expectedVersion = 2))
-        assertEquals(expected, result)
+        assertEquals(StreamVersionMismatchException(currentVersion = 1, expectedVersion = 2), exception)
     }
 }

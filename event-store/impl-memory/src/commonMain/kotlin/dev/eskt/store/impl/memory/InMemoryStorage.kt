@@ -3,8 +3,8 @@ package dev.eskt.store.impl.memory
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.StreamType
-import dev.eskt.store.storage.api.ExpectedVersionMismatch
 import dev.eskt.store.storage.api.Storage
+import dev.eskt.store.storage.api.StorageVersionMismatchException
 import kotlinx.atomicfu.locks.reentrantLock
 import kotlinx.atomicfu.locks.withLock
 
@@ -32,7 +32,7 @@ internal class InMemoryStorage(
             val streamEvents = eventsByStreamId[streamId as Any]
                 ?: mutableListOf<EventEnvelope<Any, Any>>().also { eventsByStreamId[streamId] = it }
             if (streamEvents.size != expectedVersion) {
-                throw ExpectedVersionMismatch(currentVersion = streamEvents.size, expectedVersion = expectedVersion)
+                throw StorageVersionMismatchException(currentVersion = streamEvents.size, expectedVersion = expectedVersion)
             }
             events.forEachIndexed { index, event ->
                 val position = this.events.size + 1L
