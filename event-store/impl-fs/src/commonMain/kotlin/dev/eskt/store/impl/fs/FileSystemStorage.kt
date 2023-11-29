@@ -4,8 +4,8 @@ import dev.eskt.store.api.BinarySerializableStreamType
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.StreamType
-import dev.eskt.store.storage.api.StorageVersionMismatchException
 import dev.eskt.store.storage.api.Storage
+import dev.eskt.store.storage.api.StorageVersionMismatchException
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoBuf
