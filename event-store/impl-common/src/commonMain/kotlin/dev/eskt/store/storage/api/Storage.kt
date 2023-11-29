@@ -5,7 +5,7 @@ import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.StreamType
 
 public interface Storage {
-    @Throws(ExpectedVersionMismatch::class)
+    @Throws(StorageVersionMismatchException::class)
     public fun <I, E> add(streamType: StreamType<I, E>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata)
 
     public fun <I, E> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<I, E>>

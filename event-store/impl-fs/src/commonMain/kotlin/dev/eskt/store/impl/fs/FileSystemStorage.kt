@@ -4,7 +4,7 @@ import dev.eskt.store.api.BinarySerializableStreamType
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.StreamType
-import dev.eskt.store.storage.api.ExpectedVersionMismatch
+import dev.eskt.store.storage.api.StorageVersionMismatchException
 import dev.eskt.store.storage.api.Storage
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -64,7 +64,7 @@ public class FileSystemStorage internal constructor(
         fs.openReadWrite(streamPath).use { streamHandle ->
             streamHandle.lock.withLock {
                 if (streamHandle.size() != expectedVersion * STREAM_ENTRY_SIZE_IN_BYTES) {
-                    throw ExpectedVersionMismatch((streamHandle.size() / STREAM_ENTRY_SIZE_IN_BYTES).toInt(), expectedVersion)
+                    throw StorageVersionMismatchException((streamHandle.size() / STREAM_ENTRY_SIZE_IN_BYTES).toInt(), expectedVersion)
                 }
 
                 val walAddresses = fs.openReadWrite(walPath).use { walHandle ->

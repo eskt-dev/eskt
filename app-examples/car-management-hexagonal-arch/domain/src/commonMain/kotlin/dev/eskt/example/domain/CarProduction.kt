@@ -23,9 +23,7 @@ class CarProduction(
 
         val carStreamHandler = eventStore.withStreamType(CarStreamType)
 
-        val loadResult = carStreamHandler
-            .loadStream(writeSideCar.id)
-            .unwrap()
+        val loadResult = carStreamHandler.loadStream(writeSideCar.id)
 
         val car = loadResult
             .map { it.event }
@@ -33,9 +31,7 @@ class CarProduction(
 
         val events = car.handle(command)
 
-        carStreamHandler
-            .appendStream(writeSideCar.id, car.version, events)
-            .unwrap()
+        carStreamHandler.appendStream(writeSideCar.id, car.version, events)
 
         writeSideCar.id
     }

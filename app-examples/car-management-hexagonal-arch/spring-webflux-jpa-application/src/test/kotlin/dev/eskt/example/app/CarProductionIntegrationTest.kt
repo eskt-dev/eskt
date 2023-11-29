@@ -54,7 +54,6 @@ internal class CarProductionIntegrationTest(
         val events = eventStore
             .withStreamType(CarStreamType)
             .loadStream(id)
-            .unwrap()
             .map { it.event }
         val writeSideCar = carWriteHelperRepository.getByUuid(id)
 
@@ -91,7 +90,6 @@ internal class CarProductionIntegrationTest(
         val newEvents = eventStore
             .withStreamType(CarStreamType)
             .loadStream(newId)
-            .unwrap()
             .map { it.event }
         val writeSideCar = carWriteHelperRepository.getByUuid(existingId)
         val newWriteSideCar = carWriteHelperRepository.getByUuid(newId)

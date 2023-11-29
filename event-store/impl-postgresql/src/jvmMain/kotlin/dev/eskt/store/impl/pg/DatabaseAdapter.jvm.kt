@@ -1,6 +1,6 @@
 package dev.eskt.store.impl.pg
 
-import dev.eskt.store.storage.api.ExpectedVersionMismatch
+import dev.eskt.store.storage.api.StorageVersionMismatchException
 import org.postgresql.util.PSQLState
 import java.sql.ResultSet
 import javax.sql.DataSource
@@ -114,7 +114,7 @@ internal actual class DatabaseAdapter actual constructor(
                         rs.next()
                         val currentVersion = rs.getInt(1)
                         if (expectedVersion != currentVersion) {
-                            throw ExpectedVersionMismatch(
+                            throw StorageVersionMismatchException(
                                 currentVersion,
                                 expectedVersion,
                             )
@@ -139,7 +139,7 @@ internal actual class DatabaseAdapter actual constructor(
                             if (cause.sqlState == PSQLState.UNIQUE_VIOLATION.state) {
                                 cause.serverErrorMessage
                                     ?.let {
-                                        throw ExpectedVersionMismatch(
+                                        throw StorageVersionMismatchException(
                                             // if expectedVersion already exists, assuming it's at least 1 version ahead
                                             expectedVersion + 1,
                                             expectedVersion,

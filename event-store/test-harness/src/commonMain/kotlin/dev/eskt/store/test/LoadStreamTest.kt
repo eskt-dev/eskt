@@ -27,7 +27,6 @@ public open class LoadStreamTest<R : Storage, S : EventStore, F : StreamTestFact
             .loadStream(
                 streamId = car1StreamId,
             )
-            .unwrap()
 
         // then
         assertEquals(0, eventEnvelopes.size)
@@ -52,7 +51,6 @@ public open class LoadStreamTest<R : Storage, S : EventStore, F : StreamTestFact
                     streamId = car1StreamId,
                     sinceVersion = sinceVersion,
                 )
-                .unwrap()
 
             // then
             assertEquals(2 - sinceVersion, eventEnvelopes.size)
