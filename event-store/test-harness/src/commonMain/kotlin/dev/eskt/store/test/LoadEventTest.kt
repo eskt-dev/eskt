@@ -53,6 +53,9 @@ public open class LoadEventTest<R : Storage, S : EventStore, F : StreamTestFacto
 
         // then
         assertEquals(3, eventEnvelopes.size)
-        assertTrue(eventEnvelopes.map { it.event }.all { it is CarEvent })
+        assertTrue(
+            @Suppress("USELESS_IS_CHECK")
+            eventEnvelopes.map { it.event }.all { it is CarEvent },
+        )
     }
 }
