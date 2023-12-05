@@ -17,12 +17,12 @@ internal class PostgresqlStorage(
     override fun <E, I> add(streamType: StreamType<E, I>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
         if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
         streamType as StringSerializableStreamType<E, I>
-        val entries = events.map {
+        val entries = events.mapIndexed { index, event ->
             DatabaseEntry(
                 type = streamType.id,
                 id = streamType.stringIdSerializer.serialize(streamId),
-                version = expectedVersion + 1,
-                eventPayload = streamType.stringEventSerializer.serialize(it),
+                version = expectedVersion + index + 1,
+                eventPayload = streamType.stringEventSerializer.serialize(event),
                 metadataPayload = eventMetadataSerializer.serialize(metadata),
             )
         }

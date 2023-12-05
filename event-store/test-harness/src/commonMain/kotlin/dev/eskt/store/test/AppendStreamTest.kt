@@ -48,6 +48,41 @@ public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFa
 
     @Test
     @JsName("test2")
+    public fun `given no events - when appending muliple events on a stream - events are added`() {
+        // given
+        val storage = factory.newStorage()
+
+        // when
+        val eventStore = factory.newEventStore(storage)
+        val event1 = CarProducedEvent(vin = "123", producer = 1, make = "kia", model = "rio")
+        val event2 = CarSoldEvent(seller = 1, buyer = 2, price = 23000f)
+        val metadata = mapOf(
+            "m1" to "some text",
+            "m2" to 123,
+        )
+        eventStore
+            .withStreamType(CarStreamType)
+            .appendStream(
+                streamId = car1StreamId,
+                expectedVersion = 0,
+                events = listOf(
+                    event1,
+                    event2,
+                ),
+                metadata = metadata,
+            )
+
+        // then
+        val eventEnvelope1 = EventEnvelope(CarStreamType, car1StreamId, 1, 1, metadata, event1)
+        val eventEnvelope2 = EventEnvelope(CarStreamType, car1StreamId, 2, 2, metadata, event2)
+        assertEquals(eventEnvelope1, storage.getEventByPosition(1))
+        assertEquals(eventEnvelope1, storage.getEventByStreamVersion(car1StreamId, 1))
+        assertEquals(eventEnvelope2, storage.getEventByPosition(2))
+        assertEquals(eventEnvelope2, storage.getEventByStreamVersion(car1StreamId, 2))
+    }
+
+    @Test
+    @JsName("test3")
     public fun `given 2 event from different streams - when appending events on a stream - event is added`() {
         // given
         val storage = factory.newStorage()
@@ -74,7 +109,7 @@ public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFa
     }
 
     @Test
-    @JsName("test3")
+    @JsName("test4")
     public fun `given 1 event from same stream - when appending event with already existing version - append is rejected`() {
         // given
         val storage = factory.newStorage()
@@ -101,7 +136,7 @@ public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFa
     }
 
     @Test
-    @JsName("test4")
+    @JsName("test5")
     public fun `given 1 event from same stream - when appending event out of order - append is rejected`() {
         // given
         val storage = factory.newStorage()

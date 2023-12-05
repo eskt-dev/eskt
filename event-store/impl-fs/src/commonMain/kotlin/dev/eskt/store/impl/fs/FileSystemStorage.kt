@@ -82,11 +82,11 @@ public class FileSystemStorage internal constructor(
 
                         // write wal entry
                         val walBuffer = Buffer()
-                        walEntries.forEach { walEntryBytes ->
+                        walEntries.forEachIndexed { index, walEntryBytes ->
                             walBuffer.writeInt(walEntryBytes.size)
                             walBuffer.write(walEntryBytes)
                             walBuffer.writeInt(walEntryBytes.size)
-                            walBuffer.writeLong(position)
+                            walBuffer.writeLong(position + index)
                             walAddresses.add(walAddresses.last() + 4 + walEntryBytes.size + 4 + 8)
                         }
                         walHandle.appendingSink().apply {
