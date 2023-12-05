@@ -10,7 +10,7 @@ fun Project.setupPublishing(mavenArtifactId: String) {
             artifactId = if (name == "kotlinMultiplatform") {
                 mavenArtifactId
             } else {
-                "$mavenArtifactId-$name"
+                "$mavenArtifactId-${name.lowercase()}"
             }
         }
         repositories {
