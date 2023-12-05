@@ -54,7 +54,7 @@ internal actual class DatabaseAdapter actual constructor(
         dataSource.connection.use { connection ->
             connection.prepareStatement(selectEventByTypeSincePositionSql(tableInfo.table))
                 .use { ps ->
-                    ps.setString(1, type)
+                    ps.setObject(1, type, java.sql.Types.OTHER)
                     ps.setLong(2, sincePosition)
                     ps.setInt(3, batchSize)
                     ps.executeQuery().use { rs ->
@@ -124,7 +124,7 @@ internal actual class DatabaseAdapter actual constructor(
 
             connection.prepareStatement(insertEventSql(tableInfo.table)).use { ps ->
                 entries.forEach { entry ->
-                    ps.setString(1, entry.type)
+                    ps.setObject(1, entry.type, java.sql.Types.OTHER)
                     ps.setObject(2, entry.id, java.sql.Types.OTHER)
                     ps.setInt(3, entry.version)
                     ps.setObject(4, entry.eventPayload, java.sql.Types.OTHER)
