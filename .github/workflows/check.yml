@@ -37,4 +37,4 @@ jobs:
         arguments: check
     - name: Build App Examples with Gradle
       working-directory: app-examples/car-management-hexagonal-arch
-      run: ./gradlew check
+      run: ./gradlew --no-daemon check
