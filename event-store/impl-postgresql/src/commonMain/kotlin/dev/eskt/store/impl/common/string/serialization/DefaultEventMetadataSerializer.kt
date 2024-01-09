@@ -6,10 +6,11 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.serializer
 
+// TODO move this to a `impl-common-string` module when there is another binary implementation
+
 /**
  * Default string serializer for [EventMetadata].
  */
-// move this to a `impl-common-string` module when there is another binary implementation
 public object DefaultEventMetadataSerializer : Serializer<EventMetadata, String> {
     private val json = Json {
         serializersModule = SerializersModule {

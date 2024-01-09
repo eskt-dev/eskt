@@ -7,7 +7,6 @@ import dev.eskt.store.test.w.driver.DriverStreamType
 
 @OptIn(ExperimentalStdlibApi::class)
 internal class PostgresqlStreamTestFactory : StreamTestFactory<PostgresqlStorage, PostgresqlEventStore>() {
-
     internal val connectionConfig = generateTestConnectionConfig()
 
     private val config

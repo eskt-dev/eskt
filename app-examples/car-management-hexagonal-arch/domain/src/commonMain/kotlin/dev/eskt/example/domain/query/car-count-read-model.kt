@@ -2,7 +2,6 @@ package dev.eskt.example.domain.query
 
 import com.benasher44.uuid.Uuid
 
-
 data class MakeModelCar(
     val id: Uuid,
     val make: String,

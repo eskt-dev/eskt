@@ -53,6 +53,7 @@ internal class InMemoryStorage(
     }
 
     override fun <E, I> getEventByPosition(position: Long): EventEnvelope<E, I> = events[position.toInt() - 1] as EventEnvelope<E, I>
+
     override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
         return events.asSequence()
             .drop(sincePositionInt(sincePosition))
@@ -74,10 +75,8 @@ internal class InMemoryStorage(
         return eventEnvelopes[version - 1]
     }
 
-    private fun sincePositionInt(sincePosition: Long) =
-        if (sincePosition > Int.MAX_VALUE) {
-            throw IllegalStateException("In-memory implementation can't really support more than Int.MAX_VALUE entries")
-        } else {
-            sincePosition.toInt()
-        }
+    private fun sincePositionInt(sincePosition: Long) = when {
+        sincePosition > Int.MAX_VALUE -> throw IllegalStateException("In-memory implementation can't really support more than Int.MAX_VALUE entries")
+        else -> sincePosition.toInt()
+    }
 }

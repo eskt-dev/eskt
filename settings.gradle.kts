@@ -7,7 +7,6 @@ dependencyResolutionManagement {
 
 pluginManagement {
     plugins {
-
     }
 }
 

@@ -27,7 +27,6 @@ internal class CarProductionIntegrationTest(
     @Autowired
     val carProduction: CarProduction,
 ) {
-
     @BeforeEach
     fun setup() {
         flyway.clean()

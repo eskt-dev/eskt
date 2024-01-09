@@ -13,6 +13,6 @@ fun Car.handle(command: CarCommand.Produce): List<CarEvent> {
             producer = command.producer,
             make = command.make,
             model = command.model,
-        )
+        ),
     )
 }

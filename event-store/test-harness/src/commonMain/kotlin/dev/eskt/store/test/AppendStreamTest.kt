@@ -150,7 +150,8 @@ public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFa
                 .withStreamType(CarStreamType)
                 .appendStream(
                     streamId = car1StreamId,
-                    expectedVersion = 2, // this would create a gap if accepted
+                    // this would create a gap if accepted
+                    expectedVersion = 2,
                     events = listOf(
                         event1,
                     ),

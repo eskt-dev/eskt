@@ -14,7 +14,6 @@ class CarController(
     val carProduction: CarProduction,
     val carCountRepository: MakeModelCarCountRepository,
 ) {
-
     @GetMapping("/car-count/summary")
     fun getCarCountSummary(): List<CarCount> {
         return carCountRepository.listAll().map {
@@ -37,7 +36,7 @@ class CarController(
                 body.producer,
                 body.make,
                 body.model,
-            )
+            ),
         )
     }
 

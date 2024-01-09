@@ -15,7 +15,6 @@ public data object DriverStreamType :
     StreamType<DriverEvent, Uuid>,
     BinarySerializableStreamType<DriverEvent, Uuid>,
     StringSerializableStreamType<DriverEvent, Uuid> {
-
     private val eventSerializer = DriverEvent.serializer()
 
     override val id: String = "Driver"

@@ -7,10 +7,11 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.serializer
 
+// TODO move this to a `impl-common-binary` module when there is another binary implementation
+
 /**
  * Default binary serializer for [EventMetadata].
  */
-// move this to a `impl-common-binary` module when there is another binary implementation
 @OptIn(ExperimentalSerializationApi::class)
 public object DefaultEventMetadataSerializer : Serializer<EventMetadata, ByteArray> {
     private val cbor = Cbor {
