@@ -40,9 +40,8 @@ public class EventListenerExecutorService(
         val threadNumberCounter = AtomicInteger()
         Executors.newScheduledThreadPool(4) { runnable ->
             val interceptedRunnable: () -> Unit = {
-                interceptor?.beforeStartWork()
-                runnable.run()
-                interceptor?.afterFinishWork()
+                if (interceptor != null) interceptor.intercept { runnable.run() }
+                else runnable.run()
             }
             val nextThreadNumber = threadNumberCounter.incrementAndGet()
             Thread(interceptedRunnable, "evt-listener-$nextThreadNumber").apply {
