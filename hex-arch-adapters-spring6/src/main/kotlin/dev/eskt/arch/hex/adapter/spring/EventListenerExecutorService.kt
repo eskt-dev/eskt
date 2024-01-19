@@ -6,18 +6,20 @@ import dev.eskt.arch.hex.port.SingleStreamTypeEventListener
 import dev.eskt.store.api.EventStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newFixedThreadPoolContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.InitializingBean
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 
 @Component
@@ -26,14 +28,28 @@ public class EventListenerExecutorService(
     private val bookmark: Bookmark,
     private val transactionTemplate: TransactionTemplate,
     private val eventListeners: List<SingleStreamTypeEventListener<*, *>>,
+    @Autowired(required = false)
+    private val interceptor: EventListenerWorkerThreadInterceptor?,
 ) : InitializingBean, DisposableBean {
     private val logger: Logger = LoggerFactory.getLogger(EventListenerExecutorService::class.java)
 
     private val batchSize = 100
     private val backoff = 15.seconds
 
-    @OptIn(DelicateCoroutinesApi::class)
-    private val dispatcher = newFixedThreadPoolContext(4, "evt-listener")
+    private val dispatcher = run {
+        val threadNumberCounter = AtomicInteger()
+        Executors.newScheduledThreadPool(4) { runnable ->
+            val interceptedRunnable: () -> Unit = {
+                interceptor?.beforeStartWork()
+                runnable.run()
+                interceptor?.afterFinishWork()
+            }
+            val nextThreadNumber = threadNumberCounter.incrementAndGet()
+            Thread(interceptedRunnable, "evt-listener-$nextThreadNumber").apply {
+                isDaemon = true
+            }
+        }.asCoroutineDispatcher()
+    }
     private val supervisor = SupervisorJob()
     private val scope = CoroutineScope(dispatcher + supervisor)
 
