@@ -9,7 +9,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class CarProductionNotificationProcessTest {
-
     @Test
     fun `given no cars - when listening production event - then notifier is called correctly`() {
         // given
@@ -24,7 +23,10 @@ class CarProductionNotificationProcessTest {
         val listener = CarProductionNotificationProcess(notifier)
         listener.listen(
             EventEnvelope(
-                streamType = CarStreamType, streamId = car1StreamId, version = 1, position = 1,
+                streamType = CarStreamType,
+                streamId = car1StreamId,
+                version = 1,
+                position = 1,
                 metadata = emptyMap(),
                 event = CarProducedEvent(
                     vin = "2A4RR5D1XAR410299",

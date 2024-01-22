@@ -12,5 +12,14 @@ ij_kotlin_allow_trailing_comma = true
 ij_kotlin_allow_trailing_comma_on_call_site = true
 
 ktlint_code_style = ktlint_official
+
 ktlint_standard_filename = disabled
+ktlint_standard_blank-line-before-declaration = disabled # ktlint_official only, force many unnecessary blank lines
+ktlint_standard_multiline-expression-wrapping = disabled # ktlint_official only, all multiline expressions on next line don't look good
+ktlint_standard_string-template-indent = disabled # needs to be disabled if multiline-expression-wrapping is disabled
+ktlint_standard_function-signature = disabled # let just parameter-list-wrapping apply, which takes care of longer functions only
+
 ktlint_ignore_back_ticked_identifier = true
+ktlint_function_signature_body_expression_wrapping = default
+ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than = unset
+ktlint_class_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than = unset

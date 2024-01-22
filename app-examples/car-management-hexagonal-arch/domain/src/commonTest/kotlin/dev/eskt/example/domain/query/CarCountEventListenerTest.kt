@@ -12,7 +12,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 internal class CarCountEventListenerTest {
-
     @Test
     fun `given no cars - when listening to first production event - then read model updates correctly`() {
         // given
@@ -23,7 +22,10 @@ internal class CarCountEventListenerTest {
         val listener = CarCountEventListener(countRepo, carRepo)
         listener.listen(
             EventEnvelope(
-                streamType = CarStreamType, streamId = car1StreamId, version = 1, position = 1,
+                streamType = CarStreamType,
+                streamId = car1StreamId,
+                version = 1,
+                position = 1,
                 metadata = emptyMap(),
                 event = CarProducedEvent(
                     vin = "2A4RR5D1XAR410299",
@@ -57,7 +59,10 @@ internal class CarCountEventListenerTest {
         val listener = CarCountEventListener(countRepo, carRepo)
         listener.listen(
             EventEnvelope(
-                streamType = CarStreamType, streamId = car1StreamId, version = 1, position = 1,
+                streamType = CarStreamType,
+                streamId = car1StreamId,
+                version = 1,
+                position = 1,
                 metadata = emptyMap(),
                 event = CarProducedEvent(
                     vin = "2A4RR5D1XAR410299",
@@ -91,7 +96,10 @@ internal class CarCountEventListenerTest {
         val listener = CarCountEventListener(countRepo, carRepo)
         listener.listen(
             EventEnvelope(
-                streamType = CarStreamType, streamId = car2StreamId, version = 1, position = 2,
+                streamType = CarStreamType,
+                streamId = car2StreamId,
+                version = 1,
+                position = 2,
                 metadata = emptyMap(),
                 event = CarProducedEvent(
                     vin = "1J8HG48K67C669063",
@@ -125,7 +133,10 @@ internal class CarCountEventListenerTest {
         val listener = CarCountEventListener(countRepo, carRepo)
         listener.listen(
             EventEnvelope(
-                streamType = CarStreamType, streamId = car1StreamId, version = 2, position = 2,
+                streamType = CarStreamType,
+                streamId = car1StreamId,
+                version = 2,
+                position = 2,
                 metadata = emptyMap(),
                 event = CarEliminatedEvent(
                     reason = EliminationReason.Lost,
@@ -154,7 +165,10 @@ internal class CarCountEventListenerTest {
         val listener = CarCountEventListener(countRepo, carRepo)
         listener.listen(
             EventEnvelope(
-                streamType = CarStreamType, streamId = car3StreamId, version = 1, position = 3,
+                streamType = CarStreamType,
+                streamId = car3StreamId,
+                version = 1,
+                position = 3,
                 metadata = emptyMap(),
                 event = CarProducedEvent(
                     vin = "1J4NT1GA3BD184938",

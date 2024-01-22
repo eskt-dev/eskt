@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface CarWriteHelperJpaRepository : JpaRepository<CarWriteHelperEntity, Uuid>, CarWriteHelperRepository {
-
     fun findByVin(vin: String): CarWriteHelperEntity?
 
     override fun getByUuid(id: Uuid): CarWriteHelper? {

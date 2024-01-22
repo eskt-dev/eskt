@@ -11,7 +11,6 @@ import kotlinx.serialization.encoding.Encoder
 
 @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
 internal object DefaultEventMetadataEntryValueKSerializer : KSerializer<Any> {
-
     private const val STRING_HEADER: Short = 0
     private const val BOOLEAN_HEADER: Short = 1
     private const val INT_HEADER: Short = 2

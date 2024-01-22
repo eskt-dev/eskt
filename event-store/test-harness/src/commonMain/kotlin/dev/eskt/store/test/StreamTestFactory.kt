@@ -5,7 +5,6 @@ import dev.eskt.store.storage.api.Storage
 
 @OptIn(ExperimentalStdlibApi::class)
 public abstract class StreamTestFactory<R : Storage, S : EventStore> {
-
     public val closeables: MutableList<AutoCloseable> = mutableListOf()
 
     public fun closeAll() {

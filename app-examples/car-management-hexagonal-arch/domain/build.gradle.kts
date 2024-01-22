@@ -1,5 +1,5 @@
 plugins {
-	kotlin("multiplatform")
+    kotlin("multiplatform")
 }
 
 group = "dev.eskt.example"

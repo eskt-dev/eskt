@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import kotlin.jvm.optionals.getOrNull
 
 interface MakeModelCarJpaRepository : JpaRepository<MakeModelCarEntity, Uuid>, MakeModelCarRepository {
-
     override fun find(id: Uuid): MakeModelCar? {
         return findById(id).getOrNull()?.let { MakeModelCar(id = it.id, make = it.make, model = it.model) }
     }

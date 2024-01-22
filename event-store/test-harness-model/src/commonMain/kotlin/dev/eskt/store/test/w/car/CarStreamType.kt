@@ -15,7 +15,6 @@ public data object CarStreamType :
     StreamType<CarEvent, Uuid>,
     BinarySerializableStreamType<CarEvent, Uuid>,
     StringSerializableStreamType<CarEvent, Uuid> {
-
     private val eventSerializer = CarEvent.serializer()
 
     override val id: String = "Car"
