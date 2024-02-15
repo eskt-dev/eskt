@@ -106,20 +106,19 @@ internal actual class DatabaseAdapter actual constructor(
     actual fun persistEntries(streamId: String, entries: List<PostgresqlStorage.DatabaseEntry>, tableInfo: TableInfo) {
         val expectedVersion = entries[0].version - 1
         dataSource.connection.use { connection ->
-            connection.prepareStatement(selectMaxVersionByStreamIdSql(tableInfo.table))
-                .use { ps ->
-                    ps.setObject(1, streamId, java.sql.Types.OTHER)
-                    ps.executeQuery().use { rs ->
-                        rs.next()
-                        val currentVersion = rs.getInt(1)
-                        if (expectedVersion != currentVersion) {
-                            throw StorageVersionMismatchException(
-                                currentVersion,
-                                expectedVersion,
-                            )
-                        }
+            connection.prepareStatement(selectMaxVersionByStreamIdSql(tableInfo.table)).use { ps ->
+                ps.setObject(1, streamId, java.sql.Types.OTHER)
+                ps.executeQuery().use { rs ->
+                    rs.next()
+                    val currentVersion = rs.getInt(1)
+                    if (expectedVersion != currentVersion) {
+                        throw StorageVersionMismatchException(
+                            currentVersion,
+                            expectedVersion,
+                        )
                     }
                 }
+            }
 
             if (entries.isEmpty()) return@use
 
