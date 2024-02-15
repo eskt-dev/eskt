@@ -30,6 +30,7 @@ internal expect class DatabaseAdapter(dataSource: DataSource) {
 
     fun persistEntries(
         streamId: String,
+        expectedVersion: Int,
         entries: List<DatabaseEntry>,
         tableInfo: TableInfo,
     )

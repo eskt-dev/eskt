@@ -103,8 +103,7 @@ internal actual class DatabaseAdapter actual constructor(
         )
     }
 
-    actual fun persistEntries(streamId: String, entries: List<PostgresqlStorage.DatabaseEntry>, tableInfo: TableInfo) {
-        val expectedVersion = entries[0].version - 1
+    actual fun persistEntries(streamId: String, expectedVersion: Int, entries: List<PostgresqlStorage.DatabaseEntry>, tableInfo: TableInfo) {
         dataSource.connection.use { connection ->
             connection.prepareStatement(selectMaxVersionByStreamIdSql(tableInfo.table)).use { ps ->
                 ps.setObject(1, streamId, java.sql.Types.OTHER)

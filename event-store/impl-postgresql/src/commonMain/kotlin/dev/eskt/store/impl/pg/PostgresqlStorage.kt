@@ -28,7 +28,7 @@ internal class PostgresqlStorage(
             )
         }
 
-        databaseAdapter.persistEntries(serializedId, entries, config.tableInfo)
+        databaseAdapter.persistEntries(serializedId, expectedVersion, entries, config.tableInfo)
     }
 
     override fun <E, I> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
