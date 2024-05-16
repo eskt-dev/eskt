@@ -5,7 +5,7 @@ import dev.eskt.store.api.EventStore
 import dev.eskt.store.api.StreamType
 
 public class FileSystemEventStore internal constructor(
-    config: FileSystemConfig,
+    private val config: FileSystemConfig,
     private val storage: FileSystemStorage = FileSystemStorage(config),
 ) : EventStore {
     public constructor(basePath: String, block: FileSystemConfigBuilder.() -> Unit) : this(
@@ -13,6 +13,8 @@ public class FileSystemEventStore internal constructor(
             .apply(block)
             .build(),
     )
+
+    override val registeredTypes: Set<StreamType<*, *>> = config.registeredTypes.toSet()
 
     override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
         return storage.loadEventBatch(sincePosition, batchSize)
