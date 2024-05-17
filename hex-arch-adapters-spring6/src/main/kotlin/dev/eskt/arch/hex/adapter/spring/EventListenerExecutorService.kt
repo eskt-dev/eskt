@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @Component
 public class EventListenerExecutorService(
-    private val eventStore: EventStore,
+    private val eventStores: List<EventStore>,
     private val bookmark: Bookmark,
     private val transactionTemplate: TransactionTemplate,
     private val eventListeners: List<SingleStreamTypeEventListener<*, *>>,
@@ -46,6 +46,9 @@ public class EventListenerExecutorService(
         eventListeners.forEach { genericListener ->
             @Suppress("UNCHECKED_CAST")
             val eventListener = genericListener as SingleStreamTypeEventListener<Any, Any>
+            val eventStore = eventStores
+                .singleOrNull { eventListener.streamType in it.registeredTypes }
+                ?: throw IllegalStateException("$eventListener has a stream type which needs to be registered in one (and only one) event store.")
             scope.launch {
                 while (!stopped) {
                     logger.info("Starting collection of events for $eventListener")

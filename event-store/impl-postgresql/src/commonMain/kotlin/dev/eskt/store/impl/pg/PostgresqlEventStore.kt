@@ -6,7 +6,7 @@ import dev.eskt.store.api.StreamType
 import dev.eskt.store.api.StreamTypeHandler
 
 public class PostgresqlEventStore internal constructor(
-    internal val config: PostgresqlConfig,
+    private val config: PostgresqlConfig,
     private val storage: PostgresqlStorage = PostgresqlStorage(config),
 ) : EventStore {
     public constructor(
@@ -18,6 +18,8 @@ public class PostgresqlEventStore internal constructor(
             .apply(block)
             .build(),
     )
+
+    override val registeredTypes: Set<StreamType<*, *>> = config.registeredTypes.toSet()
 
     override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
         return storage.loadEventBatch(sincePosition, batchSize)

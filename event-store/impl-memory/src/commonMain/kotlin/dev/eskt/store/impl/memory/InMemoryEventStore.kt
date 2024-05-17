@@ -6,7 +6,7 @@ import dev.eskt.store.api.StreamType
 import dev.eskt.store.api.StreamTypeHandler
 
 public class InMemoryEventStore internal constructor(
-    config: InMemoryConfig,
+    private val config: InMemoryConfig,
     private val storage: InMemoryStorage = InMemoryStorage(config),
 ) : EventStore {
     public constructor(block: InMemoryConfigBuilder.() -> Unit) : this(
@@ -14,6 +14,8 @@ public class InMemoryEventStore internal constructor(
             .apply(block)
             .build(),
     )
+
+    override val registeredTypes: Set<StreamType<*, *>> = config.registeredTypes.toSet()
 
     override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
         return storage.loadEventBatch(sincePosition, batchSize)
