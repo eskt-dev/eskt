@@ -48,7 +48,7 @@ public class EventListenerExecutorService(
             val eventListener = genericListener as SingleStreamTypeEventListener<Any, Any>
             val eventStore = eventStores
                 .singleOrNull { eventListener.streamType in it.registeredTypes }
-                ?: throw IllegalStateException("$eventListener has a stream type which needs to be registered in exactly one event store.")
+                ?: throw IllegalStateException("$eventListener has a stream type which needs to be registered in one (and only one) event store.")
             scope.launch {
                 while (!stopped) {
                     logger.info("Starting collection of events for $eventListener")
