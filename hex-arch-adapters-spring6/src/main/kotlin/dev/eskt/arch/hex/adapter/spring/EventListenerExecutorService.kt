@@ -39,9 +39,17 @@ public class EventListenerExecutorService(
 
     private var stopped = false
 
-    private fun init() {
-        // TODO enforce uniqueness of the ids of the listeners
+    init {
+        if (eventListeners.distinctBy { it.id }.size != eventListeners.size) {
+            val listenersWithDuplicatedId = eventListeners
+                .groupBy { it.id }
+                .filter { it.value.count() > 1 }
+                .mapValues { duplicatedId -> duplicatedId.value.map { it::class.simpleName } }
+            throw IllegalStateException("The following event listeners have an id that is not unique: $listenersWithDuplicatedId")
+        }
+    }
 
+    private fun init() {
         logger.info("Starting listener processes for ${eventListeners.size} listeners...")
         eventListeners.forEach { genericListener ->
             @Suppress("UNCHECKED_CAST")
