@@ -19,6 +19,7 @@ import org.springframework.beans.factory.InitializingBean
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.Job
 
 @Component
 public class EventListenerExecutorService(
@@ -39,6 +40,8 @@ public class EventListenerExecutorService(
 
     private var stopped = false
 
+    private val processes = mutableMapOf<String, EventListenerProcess>()
+
     init {
         if (eventListeners.distinctBy { it.id }.size != eventListeners.size) {
             val listenersWithDuplicatedId = eventListeners
@@ -54,34 +57,39 @@ public class EventListenerExecutorService(
         eventListeners.forEach { genericListener ->
             @Suppress("UNCHECKED_CAST")
             val eventListener = genericListener as SingleStreamTypeEventListener<Any, Any>
-            val eventStore = eventStores
-                .singleOrNull { eventListener.streamType in it.registeredTypes }
-                ?: throw IllegalStateException("$eventListener has a stream type which needs to be registered in one (and only one) event store.")
-            scope.launch {
-                while (!stopped) {
-                    logger.info("Starting collection of events for $eventListener")
-                    try {
-                        eventStore
-                            .singleStreamTypeEventFlow(
-                                streamType = eventListener.streamType,
-                                sincePosition = bookmark.get(eventListener.id),
-                                batchSize = batchSize,
-                            )
-                            .collect { envelope ->
-                                transactionTemplate.execute {
-                                    eventListener.listen(envelope)
-                                    bookmark.set(eventListener.id, envelope.position)
-                                }
-                                logger.info("Processed event position ${envelope.position} of type ${envelope.event::class.qualifiedName} in $eventListener")
+            run(eventListener)
+        }
+    }
+
+    private fun run(eventListener: SingleStreamTypeEventListener<Any, Any>) {
+        val eventStore = eventStores
+            .singleOrNull { eventListener.streamType in it.registeredTypes }
+            ?: throw IllegalStateException("$eventListener has a stream type which needs to be registered in one (and only one) event store.")
+        val job = scope.launch {
+            while (!stopped) {
+                logger.info("Starting collection of events for $eventListener")
+                try {
+                    eventStore
+                        .singleStreamTypeEventFlow(
+                            streamType = eventListener.streamType,
+                            sincePosition = bookmark.get(eventListener.id),
+                            batchSize = batchSize,
+                        )
+                        .collect { envelope ->
+                            transactionTemplate.execute {
+                                eventListener.listen(envelope)
+                                bookmark.set(eventListener.id, envelope.position)
                             }
-                    } catch (e: Exception) {
-                        if (e is CancellationException) throw e
-                        logger.error("Error while collecting events in $eventListener, will try to restart in $backoff", e)
-                        if (!stopped) delay(backoff)
-                    }
+                            logger.info("Processed event position ${envelope.position} of type ${envelope.event::class.qualifiedName} in $eventListener")
+                        }
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    logger.error("Error while collecting events in $eventListener, will try to restart in $backoff", e)
+                    if (!stopped) delay(backoff)
                 }
             }
         }
+        processes[eventListener.id] = EventListenerProcess(job, eventListener)
     }
 
     private fun shutdown() {
@@ -98,4 +106,17 @@ public class EventListenerExecutorService(
     override fun destroy() {
         shutdown()
     }
+
+    public suspend fun restartEventListener(id: String) {
+        val process = processes[id] ?: return logger.error("No current jobs for event listener '$id'")
+        process.job.cancel()
+        process.job.join()
+
+        run(process.eventListener)
+    }
 }
+
+private data class EventListenerProcess(
+    val job: Job,
+    val eventListener: SingleStreamTypeEventListener<Any, Any>,
+)
