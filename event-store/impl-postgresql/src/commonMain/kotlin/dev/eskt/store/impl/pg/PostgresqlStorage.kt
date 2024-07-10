@@ -31,9 +31,11 @@ internal class PostgresqlStorage(
         databaseAdapter.persistEntries(serializedId, expectedVersion, entries, config.tableInfo)
     }
 
-    override fun <E, I> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
+    override fun <E, I> getStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
+        streamType as StringSerializableStreamType<E, I>
+
         val entries = databaseAdapter.getEntriesByStreamIdAndVersion(
-            streamId = streamId.toString(),
+            streamId = streamType.stringIdSerializer.serialize(streamId),
             sinceVersion = sinceVersion,
             tableInfo = config.tableInfo,
         )
@@ -64,9 +66,11 @@ internal class PostgresqlStorage(
         return entries.map { entry -> entry.toEventEnvelope() }
     }
 
-    override fun <E, I> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<E, I> {
+    override fun <E, I> getEventByStreamVersion(streamType: StreamType<E, I>, streamId: I, version: Int): EventEnvelope<E, I> {
+        streamType as StringSerializableStreamType<E, I>
+
         val entry = databaseAdapter.getEntriesByStreamIdAndVersion(
-            streamId = streamId.toString(),
+            streamId = streamType.stringIdSerializer.serialize(streamId),
             sinceVersion = version - 1,
             limit = 1,
             tableInfo = config.tableInfo,

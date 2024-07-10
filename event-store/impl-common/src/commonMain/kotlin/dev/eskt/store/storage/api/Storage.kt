@@ -8,7 +8,7 @@ public interface Storage {
     @Throws(StorageVersionMismatchException::class)
     public fun <E, I> add(streamType: StreamType<E, I>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata)
 
-    public fun <E, I> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>>
+    public fun <E, I> getStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>>
 
     public fun <E, I> getEventByPosition(position: Long): EventEnvelope<E, I>
 
@@ -16,5 +16,5 @@ public interface Storage {
 
     public fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<E, I>): List<EventEnvelope<E, I>>
 
-    public fun <E, I> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<E, I>
+    public fun <E, I> getEventByStreamVersion(streamType: StreamType<E, I>, streamId: I, version: Int): EventEnvelope<E, I>
 }

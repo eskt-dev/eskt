@@ -3,6 +3,7 @@ package dev.eskt.store.impl.fs
 import dev.eskt.store.api.BinarySerializableStreamType
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata
+import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
 import dev.eskt.store.storage.api.Storage
 import dev.eskt.store.storage.api.StorageVersionMismatchException
@@ -44,7 +45,7 @@ public class FileSystemStorage internal constructor(
         if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
         streamType as BinarySerializableStreamType<E, I>
 
-        val streamPath = basePath / toPathComponent(streamId)
+        val streamPath = basePath / toPathComponent(streamId, streamType.stringIdSerializer)
         fs.createDirectories(streamPath.parent!!)
 
         // creating payloads in serialized form before acquiring any locks
@@ -117,8 +118,10 @@ public class FileSystemStorage internal constructor(
         }
     }
 
-    override fun <E, I> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
-        val streamPath = basePath / toPathComponent(streamId)
+    override fun <E, I> getStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
+        streamType as BinarySerializableStreamType<E, I>
+
+        val streamPath = basePath / toPathComponent(streamId, streamType.stringIdSerializer)
 
         if (!fs.exists(streamPath)) {
             return emptyList()
@@ -184,8 +187,10 @@ public class FileSystemStorage internal constructor(
         }
     }
 
-    override fun <E, I> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<E, I> {
-        val streamPath = basePath / toPathComponent(streamId)
+    override fun <E, I> getEventByStreamVersion(streamType: StreamType<E, I>, streamId: I, version: Int): EventEnvelope<E, I> {
+        streamType as BinarySerializableStreamType<E, I>
+
+        val streamPath = basePath / toPathComponent(streamId, streamType.stringIdSerializer)
 
         if (!fs.exists(streamPath)) {
             throw IllegalStateException("Stream $streamId is empty, file $streamPath does not exist")
@@ -223,8 +228,8 @@ public class FileSystemStorage internal constructor(
         )
     }
 
-    private fun <I> toPathComponent(streamId: I): Path {
-        return streamId.toString().split('/').fold("streams".toPath()) { current, next -> current / next }
+    private fun <I> toPathComponent(streamId: I, serializer: Serializer<I, String>): Path {
+        return serializer.serialize(streamId).split('/').fold("streams".toPath()) { current, next -> current / next }
     }
 
     @Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
