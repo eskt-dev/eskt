@@ -80,7 +80,7 @@ public class EventListenerExecutorService(
                                 eventListener.listen(envelope)
                                 bookmark.set(eventListener.id, envelope.position)
                             }
-                            logger.info("Processed event position ${envelope.position} of type ${envelope.event::class.qualifiedName} in $eventListener")
+                            logger.debug("Processed event position {} of type {} in {}", envelope.position, envelope.event::class.qualifiedName, eventListener)
                         }
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
