@@ -43,7 +43,7 @@ public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFa
         // then
         val eventEnvelope1 = EventEnvelope(CarStreamType, car1StreamId, 1, 1, metadata, event1)
         assertEquals(eventEnvelope1, storage.getEventByPosition(1))
-        assertEquals(eventEnvelope1, storage.getEventByStreamVersion(car1StreamId, 1))
+        assertEquals(eventEnvelope1, storage.getEventByStreamVersion(CarStreamType, car1StreamId, 1))
     }
 
     @Test
@@ -76,9 +76,9 @@ public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFa
         val eventEnvelope1 = EventEnvelope(CarStreamType, car1StreamId, 1, 1, metadata, event1)
         val eventEnvelope2 = EventEnvelope(CarStreamType, car1StreamId, 2, 2, metadata, event2)
         assertEquals(eventEnvelope1, storage.getEventByPosition(1))
-        assertEquals(eventEnvelope1, storage.getEventByStreamVersion(car1StreamId, 1))
+        assertEquals(eventEnvelope1, storage.getEventByStreamVersion(CarStreamType, car1StreamId, 1))
         assertEquals(eventEnvelope2, storage.getEventByPosition(2))
-        assertEquals(eventEnvelope2, storage.getEventByStreamVersion(car1StreamId, 2))
+        assertEquals(eventEnvelope2, storage.getEventByStreamVersion(CarStreamType, car1StreamId, 2))
     }
 
     @Test
@@ -105,7 +105,7 @@ public open class AppendStreamTest<R : Storage, S : EventStore, F : StreamTestFa
         // then
         val eventEnvelope1 = EventEnvelope(CarStreamType, car1StreamId, 2, 3, emptyMap(), event1)
         assertEquals(eventEnvelope1, storage.getEventByPosition(3))
-        assertEquals(eventEnvelope1, storage.getEventByStreamVersion(car1StreamId, 2))
+        assertEquals(eventEnvelope1, storage.getEventByStreamVersion(CarStreamType, car1StreamId, 2))
     }
 
     @Test

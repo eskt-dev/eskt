@@ -13,7 +13,7 @@ public class StreamTypeHandler<E, I>(
     private val storage: Storage,
 ) : StreamTypeHandler<E, I> {
     override fun loadStream(streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
-        return storage.getStreamEvents(streamId, sinceVersion)
+        return storage.getStreamEvents(streamType, streamId, sinceVersion)
     }
 
     override fun appendStream(streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata): Int {

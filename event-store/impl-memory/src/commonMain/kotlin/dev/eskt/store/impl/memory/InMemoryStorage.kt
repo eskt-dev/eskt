@@ -19,7 +19,7 @@ internal class InMemoryStorage(
 
     private val writeLock = reentrantLock()
 
-    override fun <E, I> getStreamEvents(streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
+    override fun <E, I> getStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
         return events
             .filter { it.streamId == streamId }
             .drop(sinceVersion)
@@ -70,7 +70,7 @@ internal class InMemoryStorage(
             .toList()
     }
 
-    override fun <E, I> getEventByStreamVersion(streamId: I, version: Int): EventEnvelope<E, I> {
+    override fun <E, I> getEventByStreamVersion(streamType: StreamType<E, I>, streamId: I, version: Int): EventEnvelope<E, I> {
         val eventEnvelopes = eventsByStreamId[streamId as Any] as List<EventEnvelope<E, I>>
         return eventEnvelopes[version - 1]
     }
