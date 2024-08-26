@@ -18,7 +18,6 @@ import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Job
 
 @Component
@@ -27,14 +26,12 @@ public class EventListenerExecutorService(
     private val bookmark: Bookmark,
     private val transactionTemplate: TransactionTemplate,
     private val eventListeners: List<SingleStreamTypeEventListener<*, *>>,
+    private val config: EventListenerExecutorConfig,
 ) : InitializingBean, DisposableBean {
     private val logger: Logger = LoggerFactory.getLogger(EventListenerExecutorService::class.java)
 
-    private val batchSize = 100
-    private val backoff = 15.seconds
-
     @OptIn(DelicateCoroutinesApi::class)
-    private val dispatcher = newFixedThreadPoolContext(4, "evt-listener")
+    private val dispatcher = newFixedThreadPoolContext(config.threadPoolSize, config.threadPoolName)
     private val supervisor = SupervisorJob()
     private val scope = CoroutineScope(dispatcher + supervisor)
 
@@ -73,7 +70,7 @@ public class EventListenerExecutorService(
                         .singleStreamTypeEventFlow(
                             streamType = eventListener.streamType,
                             sincePosition = bookmark.get(eventListener.id),
-                            batchSize = batchSize,
+                            batchSize = config.batchSize,
                         )
                         .collect { envelope ->
                             transactionTemplate.execute {
@@ -84,8 +81,8 @@ public class EventListenerExecutorService(
                         }
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
-                    logger.error("Error while collecting events in $eventListener, will try to restart in $backoff", e)
-                    if (!stopped) delay(backoff)
+                    logger.error("Error while collecting events in $eventListener, will try to restart in ${config.backoff}", e)
+                    if (!stopped) delay(config.backoff)
                 }
             }
         }
