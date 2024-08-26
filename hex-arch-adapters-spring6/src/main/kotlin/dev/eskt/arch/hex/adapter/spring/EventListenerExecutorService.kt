@@ -26,7 +26,7 @@ public class EventListenerExecutorService(
     private val bookmark: Bookmark,
     private val transactionTemplate: TransactionTemplate,
     private val eventListeners: List<SingleStreamTypeEventListener<*, *>>,
-    private val config: EventListenerExecutorConfig,
+    private val config: EventListenerExecutorConfig = EventListenerExecutorConfig(),
 ) : InitializingBean, DisposableBean {
     private val logger: Logger = LoggerFactory.getLogger(EventListenerExecutorService::class.java)
 
