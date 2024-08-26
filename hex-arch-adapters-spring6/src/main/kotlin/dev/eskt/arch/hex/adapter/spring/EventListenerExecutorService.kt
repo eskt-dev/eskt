@@ -63,6 +63,7 @@ public class EventListenerExecutorService(
             .singleOrNull { eventListener.streamType in it.registeredTypes }
             ?: throw IllegalStateException("$eventListener has a stream type which needs to be registered in one (and only one) event store.")
         return scope.launch {
+            var retry = 0
             while (!stopped) {
                 logger.info("Starting collection of events for $eventListener")
                 try {
@@ -77,12 +78,13 @@ public class EventListenerExecutorService(
                                 eventListener.listen(envelope)
                                 bookmark.set(eventListener.id, envelope.position)
                             }
+                            if (retry > 0) retry = 0
                             logger.debug("Processed event position {} of type {} in {}", envelope.position, envelope.event::class.qualifiedName, eventListener)
                         }
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
-                    logger.error("Error while collecting events in $eventListener, will try to restart in ${config.backoff}", e)
-                    if (!stopped) delay(config.backoff)
+                    logger.error("Error while collecting events in $eventListener, will try to restart in ${config.errorBackoff}", e)
+                    if (!stopped) delay(config.errorBackoff.backoff(++retry))
                 }
             }
         }

@@ -1,5 +1,6 @@
 package dev.eskt.example.app
 
+import dev.eskt.arch.hex.adapter.common.BackoffStrategy
 import dev.eskt.arch.hex.adapter.spring.EventListenerExecutorConfig
 import dev.eskt.store.api.EventStore
 import dev.eskt.store.impl.pg.PostgresqlEventStore
@@ -9,6 +10,7 @@ import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy
 import javax.sql.DataSource
+import kotlin.time.Duration.Companion.seconds
 
 @Configuration
 @ComponentScan(
@@ -30,6 +32,9 @@ class ApplicationEventStoreConfig {
      */
     @Bean
     fun eventListenerExecutorConfig(): EventListenerExecutorConfig {
-        return EventListenerExecutorConfig(threadPoolName = "custom-event-listener-thread", backoffInSeconds = 30)
+        return EventListenerExecutorConfig(
+            threadPoolName = "custom-event-listener-thread",
+            errorBackoff = BackoffStrategy.Constant(30.seconds),
+        )
     }
 }
