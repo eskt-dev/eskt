@@ -83,8 +83,9 @@ public class EventListenerExecutorService(
                         }
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
-                    logger.error("Error while collecting events in $eventListener, will try to restart in ${config.errorBackoff}", e)
-                    if (!stopped) delay(config.errorBackoff.backoff(++retry))
+                    val backoff = config.errorBackoff.backoff(++retry)
+                    logger.error("Error while collecting events in $eventListener, will try to restart in $backoff", e)
+                    if (!stopped) delay(backoff)
                 }
             }
         }
