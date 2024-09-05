@@ -13,7 +13,7 @@ internal actual class DatabaseAdapter actual constructor(
         tableInfo: TableInfo,
     ): PostgresqlStorage.DatabaseEntry {
         dataSource.connection.use { connection ->
-            connection.prepareStatement(selectEventByPositionSql(tableInfo.table))
+            connection.prepareStatement(selectEventByPositionSql(tableInfo))
                 .use { ps ->
                     ps.setLong(1, position)
                     ps.executeQuery().use { rs ->
@@ -30,7 +30,7 @@ internal actual class DatabaseAdapter actual constructor(
         tableInfo: TableInfo,
     ): List<PostgresqlStorage.DatabaseEntry> {
         dataSource.connection.use { connection ->
-            connection.prepareStatement(selectEventSincePositionSql(tableInfo.table))
+            connection.prepareStatement(selectEventSincePositionSql(tableInfo))
                 .use { ps ->
                     ps.setLong(1, sincePosition)
                     ps.setInt(2, batchSize)
@@ -52,7 +52,7 @@ internal actual class DatabaseAdapter actual constructor(
         tableInfo: TableInfo,
     ): List<PostgresqlStorage.DatabaseEntry> {
         dataSource.connection.use { connection ->
-            connection.prepareStatement(selectEventByTypeSincePositionSql(tableInfo.table))
+            connection.prepareStatement(selectEventByTypeSincePositionSql(tableInfo))
                 .use { ps ->
                     ps.setObject(1, type, java.sql.Types.OTHER)
                     ps.setLong(2, sincePosition)
@@ -75,7 +75,7 @@ internal actual class DatabaseAdapter actual constructor(
         tableInfo: TableInfo,
     ): List<PostgresqlStorage.DatabaseEntry> {
         dataSource.connection.use { connection ->
-            val stm = selectEventByStreamIdAndVersionSql(tableInfo.table)
+            val stm = selectEventByStreamIdAndVersionSql(tableInfo)
             connection.prepareStatement(stm)
                 .use { ps ->
                     ps.setObject(1, streamId, java.sql.Types.OTHER)
@@ -105,7 +105,7 @@ internal actual class DatabaseAdapter actual constructor(
 
     actual fun persistEntries(streamId: String, expectedVersion: Int, entries: List<PostgresqlStorage.DatabaseEntry>, tableInfo: TableInfo) {
         dataSource.connection.use { connection ->
-            connection.prepareStatement(selectMaxVersionByStreamIdSql(tableInfo.table)).use { ps ->
+            connection.prepareStatement(selectMaxVersionByStreamIdSql(tableInfo)).use { ps ->
                 ps.setObject(1, streamId, java.sql.Types.OTHER)
                 ps.executeQuery().use { rs ->
                     rs.next()
@@ -121,7 +121,7 @@ internal actual class DatabaseAdapter actual constructor(
 
             if (entries.isEmpty()) return@use
 
-            connection.prepareStatement(insertEventSql(tableInfo.table)).use { ps ->
+            connection.prepareStatement(insertEventSql(tableInfo)).use { ps ->
                 entries.forEach { entry ->
                     ps.setObject(1, entry.type, java.sql.Types.OTHER)
                     ps.setObject(2, entry.id, java.sql.Types.OTHER)
