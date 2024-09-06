@@ -11,6 +11,7 @@ internal class PostgresqlConfig(
     val eventMetadataSerializer: Serializer<EventMetadata, String>,
     val dataSource: DataSource,
     val eventTable: String,
+    val eventWriteTable: String = eventTable,
 ) {
     private val registeredTypeById: Map<String, StreamType<*, *>> by lazy { registeredTypes.associateBy { it.id } }
 
@@ -21,6 +22,7 @@ internal class PostgresqlConfig(
 
     val tableInfo = TableInfo(
         table = eventTable,
+        writeTable = eventWriteTable,
     )
 }
 
@@ -37,11 +39,16 @@ internal data class ConnectionConfig(
 
 internal data class TableInfo(
     val table: String,
+    val writeTable: String,
 )
 
 public class PostgresqlConfigBuilder(
     private val datasource: DataSource,
     private val eventTable: String,
+    /**
+     * In case you need your event table to be a view, you can define a different table name that will be used for write operations only.
+     */
+    private val eventWriteTable: String = eventTable,
 ) {
     private val registeredTypes = mutableListOf<StreamType<*, *>>()
     private var eventMetadataSerializer: Serializer<EventMetadata, String> = DefaultEventMetadataSerializer
@@ -60,5 +67,6 @@ public class PostgresqlConfigBuilder(
         eventMetadataSerializer = eventMetadataSerializer,
         dataSource = datasource,
         eventTable = eventTable,
+        eventWriteTable = eventWriteTable,
     )
 }
