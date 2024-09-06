@@ -12,9 +12,10 @@ public class PostgresqlEventStore internal constructor(
     public constructor(
         dataSource: DataSource,
         eventTable: String,
+        eventWriteTable: String = eventTable,
         block: PostgresqlConfigBuilder.() -> Unit,
     ) : this(
-        PostgresqlConfigBuilder(dataSource, eventTable)
+        PostgresqlConfigBuilder(dataSource, eventTable, eventWriteTable)
             .apply(block)
             .build(),
     )
