@@ -15,6 +15,14 @@ internal class PostgresqlStreamTestFactory : StreamTestFactory<PostgresqlStorage
                 CarStreamType,
                 DriverStreamType,
             ),
+            payloadSerializers = mapOf(
+                CarStreamType to CarStreamType.stringEventSerializer,
+                DriverStreamType to DriverStreamType.stringEventSerializer,
+            ),
+            idSerializers = mapOf(
+                CarStreamType to CarStreamType.stringIdSerializer,
+                DriverStreamType to DriverStreamType.stringIdSerializer,
+            ),
             eventMetadataSerializer = DefaultEventMetadataSerializer,
             dataSource = connectionConfig.dataSource(closeables),
             eventTable = "event",

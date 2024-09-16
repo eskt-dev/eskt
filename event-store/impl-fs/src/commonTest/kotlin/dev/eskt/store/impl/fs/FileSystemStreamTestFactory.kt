@@ -13,6 +13,14 @@ internal class FileSystemStreamTestFactory : StreamTestFactory<FileSystemStorage
             CarStreamType,
             DriverStreamType,
         ),
+        payloadSerializers = mapOf(
+            CarStreamType to CarStreamType.binaryEventSerializer,
+            DriverStreamType to DriverStreamType.binaryEventSerializer,
+        ),
+        idSerializers = mapOf(
+            CarStreamType to CarStreamType.stringIdSerializer,
+            DriverStreamType to DriverStreamType.stringIdSerializer,
+        ),
     )
 
     override fun createStorage(): FileSystemStorage {

@@ -2,24 +2,19 @@ package dev.eskt.store.test.w.driver
 
 import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuidFrom
-import dev.eskt.store.api.BinarySerializableStreamType
 import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
-import dev.eskt.store.api.StringSerializableStreamType
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalSerializationApi::class)
-public data object DriverStreamType :
-    StreamType<DriverEvent, Uuid>,
-    BinarySerializableStreamType<DriverEvent, Uuid>,
-    StringSerializableStreamType<DriverEvent, Uuid> {
+public data object DriverStreamType : StreamType<DriverEvent, Uuid> {
     private val eventSerializer = DriverEvent.serializer()
 
     override val id: String = "Driver"
 
-    override val stringIdSerializer: Serializer<Uuid, String> = object : Serializer<Uuid, String> {
+    val stringIdSerializer: Serializer<Uuid, String> = object : Serializer<Uuid, String> {
         override fun serialize(obj: Uuid): String {
             return obj.toString()
         }
@@ -29,7 +24,7 @@ public data object DriverStreamType :
         }
     }
 
-    override val stringEventSerializer: Serializer<DriverEvent, String> = object : Serializer<DriverEvent, String> {
+    val stringEventSerializer: Serializer<DriverEvent, String> = object : Serializer<DriverEvent, String> {
         private val json = Json {
             ignoreUnknownKeys = true
         }
@@ -43,7 +38,7 @@ public data object DriverStreamType :
         }
     }
 
-    override val binaryEventSerializer: Serializer<DriverEvent, ByteArray> = object : Serializer<DriverEvent, ByteArray> {
+    val binaryEventSerializer: Serializer<DriverEvent, ByteArray> = object : Serializer<DriverEvent, ByteArray> {
         private val cbor = Cbor {
             ignoreUnknownKeys = true
         }

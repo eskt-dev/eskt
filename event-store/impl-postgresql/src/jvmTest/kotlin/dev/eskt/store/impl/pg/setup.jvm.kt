@@ -6,7 +6,7 @@ internal actual fun ConnectionConfig.dataSource(closeables: MutableList<AutoClos
     return HikariDataSource(toHikariConfig()).also { closeables.add(it) }
 }
 
-internal actual fun ConnectionConfig.create(eventTable: String) {
+internal actual fun ConnectionConfig.create(eventTable: String, streamIdType: String) {
     val adminConnectionConfig = copy(database = "postgres", minPoolSize = 1, maxPoolSize = 1)
     val adminHikariConfig = adminConnectionConfig.toHikariConfig()
     val adminDataSource = HikariDataSource(adminHikariConfig)
@@ -32,7 +32,7 @@ internal actual fun ConnectionConfig.create(eventTable: String) {
                 (
                     position    bigserial NOT NULL unique,
                     stream_type text      NOT NULL,
-                    stream_id   uuid      NOT NULL,
+                    stream_id   $streamIdType      NOT NULL,
                     version     int       NOT NULL,
                     payload     jsonb     NOT NULL,
                     metadata    jsonb     NOT NULL,
