@@ -5,7 +5,7 @@ plugins {
 group = "dev.eskt"
 
 kotlin {
-    setupPlatforms()
+    setupPlatforms(ios = false)
 
     sourceSets {
         commonMain {
