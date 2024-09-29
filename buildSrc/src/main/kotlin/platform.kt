@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
-fun KotlinMultiplatformExtension.setupPlatforms(jvm: Boolean = true, native: Boolean = true, node: Boolean = true) {
+fun KotlinMultiplatformExtension.setupPlatforms(jvm: Boolean = true, native: Boolean = true, node: Boolean = true, ios: Boolean = true) {
     jvmToolchain(17)
 
     if (jvm) {
@@ -15,10 +15,15 @@ fun KotlinMultiplatformExtension.setupPlatforms(jvm: Boolean = true, native: Boo
         }
     }
 
+    if (ios) {
+        iosX64()
+        iosArm64()
+        iosSimulatorArm64()
+    }
+
     if (native) {
         linuxX64()
-        // waiting for Okio 3.6 release
-        // linuxArm64()
+        linuxArm64()
         macosX64()
         macosArm64()
     }

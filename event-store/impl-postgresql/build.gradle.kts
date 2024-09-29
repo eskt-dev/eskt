@@ -5,7 +5,7 @@ plugins {
 group = "dev.eskt"
 
 kotlin {
-    setupPlatforms(jvm = true, native = false, node = false)
+    setupPlatforms(jvm = true, native = false, node = false, ios = false)
 
     sourceSets {
         commonMain {
