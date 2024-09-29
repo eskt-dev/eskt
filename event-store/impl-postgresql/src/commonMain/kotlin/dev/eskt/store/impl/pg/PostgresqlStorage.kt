@@ -2,8 +2,8 @@ package dev.eskt.store.impl.pg
 
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata
+import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
-import dev.eskt.store.api.StringSerializableStreamType
 import dev.eskt.store.storage.api.Storage
 
 internal class PostgresqlStorage(
@@ -16,7 +16,6 @@ internal class PostgresqlStorage(
 
     override fun <E, I> add(streamType: StreamType<E, I>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
         if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
-        streamType as StringSerializableStreamType<E, I>
         val serializedId = streamType.stringIdSerializer.serialize(streamId)
         val entries = events.mapIndexed { index, event ->
             DatabaseEntry(
@@ -32,8 +31,7 @@ internal class PostgresqlStorage(
     }
 
     override fun <E, I> getStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
-        streamType as StringSerializableStreamType<E, I>
-
+        if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
         val entries = databaseAdapter.getEntriesByStreamIdAndVersion(
             streamId = streamType.stringIdSerializer.serialize(streamId),
             sinceVersion = sinceVersion,
@@ -67,8 +65,7 @@ internal class PostgresqlStorage(
     }
 
     override fun <E, I> getEventByStreamVersion(streamType: StreamType<E, I>, streamId: I, version: Int): EventEnvelope<E, I> {
-        streamType as StringSerializableStreamType<E, I>
-
+        if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
         val entry = databaseAdapter.getEntriesByStreamIdAndVersion(
             streamId = streamType.stringIdSerializer.serialize(streamId),
             sinceVersion = version - 1,
@@ -79,7 +76,7 @@ internal class PostgresqlStorage(
     }
 
     private fun <E, I> DatabaseEntry.toEventEnvelope(): EventEnvelope<E, I> {
-        val streamType = config.streamType<E, I, StringSerializableStreamType<E, I>>(type)
+        val streamType = config.streamType<E, I, StreamType<E, I>>(type)
         return EventEnvelope(
             streamType = streamType,
             streamId = streamType.stringIdSerializer.deserialize(id),
@@ -89,6 +86,14 @@ internal class PostgresqlStorage(
             metadata = eventMetadataSerializer.deserialize(metadataPayload),
         )
     }
+
+    @Suppress("UNCHECKED_CAST")
+    private val <E, I> StreamType<E, I>.stringIdSerializer: Serializer<I, String>
+        get() = config.idSerializers[this] as Serializer<I, String>
+
+    @Suppress("UNCHECKED_CAST")
+    private val <E, I> StreamType<E, I>.stringEventSerializer: Serializer<E, String>
+        get() = config.payloadSerializers[this] as Serializer<E, String>
 
     internal class DatabaseEntry(
         val position: Long = -1,

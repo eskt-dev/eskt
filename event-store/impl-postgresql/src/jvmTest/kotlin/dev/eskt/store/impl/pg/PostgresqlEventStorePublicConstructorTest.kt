@@ -1,17 +1,53 @@
 package dev.eskt.store.impl.pg
 
-import com.zaxxer.hikari.HikariDataSource
+import dev.eskt.store.test.w.car.CarProducedEvent
 import dev.eskt.store.test.w.car.CarStreamType
+import dev.eskt.store.test.w.driver.DriverRegisteredEvent
+import dev.eskt.store.test.w.driver.DriverStreamType
+import dev.eskt.store.test.w.part.PartProducedEvent
+import dev.eskt.store.test.w.part.PartStreamType
 import org.junit.Test
+import java.util.UUID
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 
 internal class PostgresqlEventStorePublicConstructorTest {
+    private val connectionConfig = generateTestConnectionConfig()
+    private val closeables = mutableListOf<AutoCloseable>()
+
+    @BeforeTest
+    fun beforeEach() {
+        connectionConfig.create("event", streamIdType = "text")
+    }
+
+    @AfterTest
+    fun afterEach() {
+        closeables.forEach { it.close() }
+        connectionConfig.drop()
+    }
+
     @Test
     fun `public constructor creates event store and allow withStreamType to be called`() {
-        val dataSource = HikariDataSource(generateTestConnectionConfig().copy(database = "postgres").toHikariConfig())
-        val eventStore = PostgresqlEventStore(dataSource, "new_events") {
-            registerStreamType(CarStreamType)
+        val dataSource = connectionConfig.dataSource(closeables)
+        val eventStore = PostgresqlEventStore(dataSource, "event") {
+            registerStreamType(PartStreamType)
+            registerStreamType(DriverStreamType)
+            registerStreamType(CarStreamType, idSerializer = CarStreamType.stringIdSerializer)
         }
 
-        eventStore.withStreamType(CarStreamType)
+        val newPartId = "pr-43234"
+        val partStreamType = eventStore.withStreamType(PartStreamType)
+        partStreamType.appendStream(newPartId, 0, listOf(PartProducedEvent(1, "PR43234")))
+        partStreamType.loadStream(newPartId)
+
+        val newDriverId = UUID.randomUUID()
+        val driverStreamType = eventStore.withStreamType(DriverStreamType)
+        driverStreamType.appendStream(newDriverId, 0, listOf(DriverRegisteredEvent(licence = "9753510", name = "Johnny")))
+        driverStreamType.loadStream(newDriverId)
+
+        val newCarId = UUID.randomUUID()
+        val carStreamType = eventStore.withStreamType(CarStreamType)
+        carStreamType.appendStream(newCarId, 0, listOf(CarProducedEvent(vin = "1233", producer = 1, make = "a", model = "b")))
+        carStreamType.loadStream(newCarId)
     }
 }

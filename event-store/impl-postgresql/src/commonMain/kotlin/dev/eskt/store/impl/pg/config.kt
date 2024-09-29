@@ -3,12 +3,18 @@ package dev.eskt.store.impl.pg
 import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
-import dev.eskt.store.api.StringSerializableStreamType
 import dev.eskt.store.impl.common.string.serialization.DefaultEventMetadataSerializer
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
+import java.util.UUID
+import kotlin.reflect.KClass
 
 internal class PostgresqlConfig(
     val registeredTypes: List<StreamType<*, *>>,
-    val eventMetadataSerializer: Serializer<EventMetadata, String>,
+    internal val payloadSerializers: Map<StreamType<*, *>, Serializer<*, String>>,
+    internal val idSerializers: Map<StreamType<*, *>, Serializer<*, String>>,
+    internal val eventMetadataSerializer: Serializer<EventMetadata, String>,
     val dataSource: DataSource,
     val eventTable: String,
     val eventWriteTable: String = eventTable,
@@ -51,19 +57,71 @@ public class PostgresqlConfigBuilder(
     private val eventWriteTable: String = eventTable,
 ) {
     private val registeredTypes = mutableListOf<StreamType<*, *>>()
+    private val payloadSerializers = mutableMapOf<StreamType<*, *>, Serializer<*, String>>()
+    private val idSerializers = mutableMapOf<StreamType<*, *>, Serializer<*, String>>()
     private var eventMetadataSerializer: Serializer<EventMetadata, String> = DefaultEventMetadataSerializer
 
-    public fun <E, I, T> registerStreamType(streamType: T)
-    where T : StreamType<E, I>, T : StringSerializableStreamType<E, I> {
-        registeredTypes += streamType as StringSerializableStreamType<*, *>
+    public fun <E, I, T> registerStreamTypeWith(streamType: T, payloadSerializer: Serializer<E, String>, idSerializer: Serializer<I, String>)
+    where T : StreamType<E, I> {
+        registeredTypes += streamType as StreamType<*, *>
+        payloadSerializers[streamType] = payloadSerializer as Serializer<*, String>
+        idSerializers[streamType] = idSerializer as Serializer<*, String>
+    }
+
+    public inline fun <reified E : Any, reified I : Any, T> registerStreamType(
+        streamType: T,
+        payloadSerializer: Serializer<E, String> = createDefaultPayloadSerializer(E::class),
+        idSerializer: Serializer<I, String> = createDefaultIdSerializer(I::class),
+    )
+    where T : StreamType<E, I> {
+        registerStreamTypeWith(streamType, payloadSerializer, idSerializer)
     }
 
     public fun eventMetadataSerializer(eventMetadataSerializer: Serializer<EventMetadata, String>) {
         this.eventMetadataSerializer = eventMetadataSerializer
     }
 
+    @OptIn(InternalSerializationApi::class)
+    public fun <E : Any> createDefaultPayloadSerializer(type: KClass<E>): Serializer<E, String> {
+        return object : Serializer<E, String> {
+            val json = Json
+            val serializer = try {
+                type.serializer()
+            } catch (e: kotlinx.serialization.SerializationException) {
+                throw IllegalStateException("$type is not marked with @Serializable, please register this type with an explicit serializer", e)
+            }
+
+            override fun serialize(obj: E): String {
+                return json.encodeToString(serializer, obj)
+            }
+
+            override fun deserialize(payload: String): E {
+                return json.decodeFromString(serializer, payload)
+            }
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    public fun <I : Any> createDefaultIdSerializer(type: KClass<I>): Serializer<I, String> {
+        return object : Serializer<I, String> {
+            override fun serialize(obj: I): String = when (type) {
+                String::class -> obj as String
+                UUID::class -> obj.toString()
+                else -> throw IllegalStateException("$type cannot be serialized automatically, please register this type with an explicit id serializer")
+            }
+
+            override fun deserialize(payload: String): I = when (type) {
+                String::class -> payload as I
+                UUID::class -> UUID.fromString(payload) as I
+                else -> throw IllegalStateException("$type cannot be deserialized automatically, please register this type with an explicit id serializer")
+            }
+        }
+    }
+
     internal fun build(): PostgresqlConfig = PostgresqlConfig(
         registeredTypes = registeredTypes,
+        payloadSerializers = payloadSerializers,
+        idSerializers = idSerializers,
         eventMetadataSerializer = eventMetadataSerializer,
         dataSource = datasource,
         eventTable = eventTable,
