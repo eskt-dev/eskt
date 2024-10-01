@@ -2,6 +2,7 @@ package dev.eskt.arch.hex.adapter.spring
 
 import dev.eskt.arch.hex.adapter.common.Bookmark
 import dev.eskt.arch.hex.adapter.common.singleStreamTypeEventFlow
+import dev.eskt.arch.hex.port.EventListener
 import dev.eskt.arch.hex.port.SingleStreamTypeEventListener
 import dev.eskt.arch.hex.port.MultiStreamTypeEventListener
 import dev.eskt.store.api.EventStore
