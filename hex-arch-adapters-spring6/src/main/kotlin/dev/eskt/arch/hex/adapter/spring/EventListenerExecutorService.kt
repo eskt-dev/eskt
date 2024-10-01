@@ -3,13 +3,13 @@ package dev.eskt.arch.hex.adapter.spring
 import dev.eskt.arch.hex.adapter.common.Bookmark
 import dev.eskt.arch.hex.adapter.common.multiStreamTypeEventFlow
 import dev.eskt.arch.hex.adapter.common.singleStreamTypeEventFlow
-import dev.eskt.arch.hex.port.EventListener
-import dev.eskt.arch.hex.port.SingleStreamTypeEventListener
 import dev.eskt.arch.hex.port.MultiStreamTypeEventListener
+import dev.eskt.arch.hex.port.SingleStreamTypeEventListener
 import dev.eskt.store.api.EventStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -21,7 +21,6 @@ import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
-import kotlinx.coroutines.Job
 
 @Component
 public class EventListenerExecutorService(
@@ -55,8 +54,10 @@ public class EventListenerExecutorService(
     }
 
     private fun init() {
-        logger.info("Starting listener processes for ${singleStreamTypeEventListeners.size} single event listeners " +
-                "and ${multiStreamTypeEventListeners.size} multi event listeners...")
+        logger.info(
+            "Starting listener processes for ${singleStreamTypeEventListeners.size} single event listeners " +
+                    "and ${multiStreamTypeEventListeners.size} multi event listeners...",
+        )
 
         singleStreamTypeEventListeners.forEach { genericListener ->
             @Suppress("UNCHECKED_CAST")
@@ -156,8 +157,12 @@ public class EventListenerExecutorService(
         job.cancel()
         job.join()
 
+        val eventListener = (singleStreamTypeEventListeners + multiStreamTypeEventListeners).single { it.id == id }
+
         @Suppress("UNCHECKED_CAST")
-        val eventListener =  (singleStreamTypeEventListeners + multiStreamTypeEventListeners).single { it.id == id } as SingleStreamTypeEventListener<Any, Any>
-        jobs[eventListener.id] = startJob(eventListener)
+        jobs[eventListener.id] = when (eventListener) {
+            is MultiStreamTypeEventListener<*, *> -> startJob(eventListener as MultiStreamTypeEventListener<Any, Any>)
+            is SingleStreamTypeEventListener<*, *> -> startJob(eventListener as SingleStreamTypeEventListener<Any, Any>)
+        }
     }
 }

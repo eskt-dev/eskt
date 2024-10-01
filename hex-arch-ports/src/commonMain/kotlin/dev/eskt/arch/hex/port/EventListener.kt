@@ -1,5 +1,5 @@
 package dev.eskt.arch.hex.port
 
-public interface EventListener {
+public sealed interface EventListener {
     public val id: String
 }
