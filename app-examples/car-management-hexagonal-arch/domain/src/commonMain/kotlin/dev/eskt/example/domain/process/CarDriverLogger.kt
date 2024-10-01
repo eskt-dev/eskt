@@ -12,7 +12,7 @@ import dev.eskt.store.test.w.driver.DriverStreamType
 
 @EventListener
 class CarDriverLogger: MultiStreamTypeEventListener<Any, Uuid> {
-    override val id: String = "car-driver-rmp"
+    override val id: String = "car-driver-pm"
 
     override val streamTypes: List<StreamType<out Any, Uuid>> = listOf(
         CarStreamType,
