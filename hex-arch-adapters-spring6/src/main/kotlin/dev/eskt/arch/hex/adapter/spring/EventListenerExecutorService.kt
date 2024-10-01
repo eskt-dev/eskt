@@ -44,7 +44,7 @@ public class EventListenerExecutorService(
     private val jobs = mutableMapOf<String, Job>()
 
     init {
-        val allEventListeners: List<EventListener> = singleStreamTypeEventListeners + multiStreamTypeEventListeners
+        val allEventListeners = singleStreamTypeEventListeners + multiStreamTypeEventListeners
         if (allEventListeners.distinctBy { it.id }.size != allEventListeners.size) {
             val listenersWithDuplicatedId = allEventListeners
                 .groupBy { it.id }

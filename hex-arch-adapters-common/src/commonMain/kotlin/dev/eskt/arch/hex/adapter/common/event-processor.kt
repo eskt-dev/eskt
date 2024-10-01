@@ -24,7 +24,7 @@ public suspend inline fun <E, I> EventStore.singleStreamTypeEventFlow(
     }
 }
 
-public suspend inline fun <E, I> EventStore.multiStreamTypeEventFlow(
+public suspend inline fun EventStore.multiStreamTypeEventFlow(
     sincePosition: Long,
     batchSize: Int,
 ): Flow<EventEnvelope<Any, Any>> = channelFlow {
