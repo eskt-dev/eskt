@@ -1,12 +1,15 @@
 package dev.eskt.arch.hex.adapter.spring
 
 import dev.eskt.arch.hex.adapter.common.Bookmark
+import dev.eskt.arch.hex.adapter.common.multiStreamTypeEventFlow
 import dev.eskt.arch.hex.adapter.common.singleStreamTypeEventFlow
+import dev.eskt.arch.hex.port.MultiStreamTypeEventListener
 import dev.eskt.arch.hex.port.SingleStreamTypeEventListener
 import dev.eskt.store.api.EventStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -18,14 +21,14 @@ import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
-import kotlinx.coroutines.Job
 
 @Component
 public class EventListenerExecutorService(
     private val eventStores: List<EventStore>,
     private val bookmark: Bookmark,
     private val transactionTemplate: TransactionTemplate,
-    private val eventListeners: List<SingleStreamTypeEventListener<*, *>>,
+    private val singleStreamTypeEventListeners: List<SingleStreamTypeEventListener<*, *>>,
+    private val multiStreamTypeEventListeners: List<MultiStreamTypeEventListener<*, *>>,
     private val config: EventListenerExecutorConfig = EventListenerExecutorConfig(),
 ) : InitializingBean, DisposableBean {
     private val logger: Logger = LoggerFactory.getLogger(EventListenerExecutorService::class.java)
@@ -40,8 +43,9 @@ public class EventListenerExecutorService(
     private val jobs = mutableMapOf<String, Job>()
 
     init {
-        if (eventListeners.distinctBy { it.id }.size != eventListeners.size) {
-            val listenersWithDuplicatedId = eventListeners
+        val allEventListeners = singleStreamTypeEventListeners + multiStreamTypeEventListeners
+        if (allEventListeners.distinctBy { it.id }.size != allEventListeners.size) {
+            val listenersWithDuplicatedId = allEventListeners
                 .groupBy { it.id }
                 .filter { it.value.count() > 1 }
                 .mapValues { duplicatedId -> duplicatedId.value.map { it::class.simpleName } }
@@ -50,10 +54,19 @@ public class EventListenerExecutorService(
     }
 
     private fun init() {
-        logger.info("Starting listener processes for ${eventListeners.size} listeners...")
-        eventListeners.forEach { genericListener ->
+        logger.info(
+            "Starting listener processes for ${singleStreamTypeEventListeners.size} single event listeners " +
+                    "and ${multiStreamTypeEventListeners.size} multi event listeners...",
+        )
+
+        singleStreamTypeEventListeners.forEach { genericListener ->
             @Suppress("UNCHECKED_CAST")
             val eventListener = genericListener as SingleStreamTypeEventListener<Any, Any>
+            jobs[eventListener.id] = startJob(eventListener)
+        }
+        multiStreamTypeEventListeners.forEach { genericListener ->
+            @Suppress("UNCHECKED_CAST")
+            val eventListener = genericListener as MultiStreamTypeEventListener<Any, Any>
             jobs[eventListener.id] = startJob(eventListener)
         }
     }
@@ -70,6 +83,38 @@ public class EventListenerExecutorService(
                     eventStore
                         .singleStreamTypeEventFlow(
                             streamType = eventListener.streamType,
+                            sincePosition = bookmark.get(eventListener.id),
+                            batchSize = config.batchSize,
+                        )
+                        .collect { envelope ->
+                            transactionTemplate.execute {
+                                eventListener.listen(envelope)
+                                bookmark.set(eventListener.id, envelope.position)
+                            }
+                            if (retry > 0) retry = 0
+                            logger.debug("Processed event position {} of type {} in {}", envelope.position, envelope.event::class.qualifiedName, eventListener)
+                        }
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    val backoff = config.errorBackoff.backoff(++retry)
+                    logger.error("Error while collecting events in $eventListener, will try to restart in $backoff", e)
+                    if (!stopped) delay(backoff)
+                }
+            }
+        }
+    }
+
+    private fun startJob(eventListener: MultiStreamTypeEventListener<Any, Any>): Job {
+        val eventStore = eventStores
+            .singleOrNull { es -> eventListener.streamTypes.all { st -> st in es.registeredTypes } }
+            ?: throw IllegalStateException("$eventListener has a stream type which needs to be registered in one (and only one) event store.")
+        return scope.launch {
+            var retry = 0
+            while (!stopped) {
+                logger.info("Starting collection of events for $eventListener")
+                try {
+                    eventStore
+                        .multiStreamTypeEventFlow(
                             sincePosition = bookmark.get(eventListener.id),
                             batchSize = config.batchSize,
                         )
@@ -112,8 +157,12 @@ public class EventListenerExecutorService(
         job.cancel()
         job.join()
 
+        val eventListener = (singleStreamTypeEventListeners + multiStreamTypeEventListeners).single { it.id == id }
+
         @Suppress("UNCHECKED_CAST")
-        val eventListener = eventListeners.single { it.id == id } as SingleStreamTypeEventListener<Any, Any>
-        jobs[eventListener.id] = startJob(eventListener)
+        jobs[eventListener.id] = when (eventListener) {
+            is MultiStreamTypeEventListener<*, *> -> startJob(eventListener as MultiStreamTypeEventListener<Any, Any>)
+            is SingleStreamTypeEventListener<*, *> -> startJob(eventListener as SingleStreamTypeEventListener<Any, Any>)
+        }
     }
 }

@@ -5,6 +5,7 @@ import dev.eskt.arch.hex.adapter.spring.EventListenerExecutorConfig
 import dev.eskt.store.api.EventStore
 import dev.eskt.store.impl.pg.PostgresqlEventStore
 import dev.eskt.store.test.w.car.CarStreamType
+import dev.eskt.store.test.w.driver.DriverStreamType
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
@@ -24,6 +25,7 @@ class ApplicationEventStoreConfig {
         val transactionAwareDataSource = TransactionAwareDataSourceProxy(dataSource)
         return PostgresqlEventStore(transactionAwareDataSource, "event") {
             registerStreamType(CarStreamType)
+            registerStreamType(DriverStreamType)
         }
     }
 
