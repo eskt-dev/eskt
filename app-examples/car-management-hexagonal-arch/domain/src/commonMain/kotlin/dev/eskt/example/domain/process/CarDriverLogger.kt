@@ -11,19 +11,4 @@ import dev.eskt.store.test.w.driver.DriverRegisteredEvent
 import dev.eskt.store.test.w.driver.DriverStreamType
 
 @EventListener
-class CarDriverLogger : MultiStreamTypeEventListener<Any, Uuid> {
-    override val id: String = "car-driver-pm"
-    val logs = mutableListOf<String>()
-
-    override val streamTypes: List<StreamType<out Any, Uuid>> = listOf(
-        CarStreamType,
-        DriverStreamType,
-    )
-
-    override fun listen(envelope: EventEnvelope<Any, Uuid>) {
-        when (val event = envelope.event) {
-            is DriverRegisteredEvent -> logs += "Driver registered: ${event.name}"
-            is CarProducedEvent -> logs += "Car produced: ${event.make} ${event.model}"
-        }
-    }
-}
+interface CarDriverLogger : MultiStreamTypeEventListener<Any, Uuid>
