@@ -55,7 +55,9 @@ public class EventListenerExecutorService(
     }
 
     private fun init() {
-        logger.info("Starting listener processes for ${singleStreamTypeEventListeners.size} listeners...")
+        logger.info("Starting listener processes for ${singleStreamTypeEventListeners.size} single event listeners " +
+                "and ${multiStreamTypeEventListeners.size} multi event listeners...")
+
         singleStreamTypeEventListeners.forEach { genericListener ->
             @Suppress("UNCHECKED_CAST")
             val eventListener = genericListener as SingleStreamTypeEventListener<Any, Any>
@@ -155,7 +157,7 @@ public class EventListenerExecutorService(
         job.join()
 
         @Suppress("UNCHECKED_CAST")
-        val eventListener = singleStreamTypeEventListeners.single { it.id == id } as SingleStreamTypeEventListener<Any, Any>
+        val eventListener =  (singleStreamTypeEventListeners + multiStreamTypeEventListeners).single { it.id == id } as SingleStreamTypeEventListener<Any, Any>
         jobs[eventListener.id] = startJob(eventListener)
     }
 }
