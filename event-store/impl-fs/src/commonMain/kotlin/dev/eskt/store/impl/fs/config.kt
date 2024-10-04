@@ -6,9 +6,6 @@ import dev.eskt.store.api.StreamType
 import dev.eskt.store.impl.common.binary.serialization.DefaultEventMetadataSerializer
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.cbor.Cbor
-import kotlinx.serialization.decodeFromHexString
-import kotlinx.serialization.encodeToHexString
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.serializer
 import okio.Path
@@ -74,28 +71,14 @@ public class FileSystemConfigBuilder(
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     @Suppress("UNCHECKED_CAST")
     public fun <I : Any> createDefaultIdSerializer(type: KClass<I>): Serializer<I, String> {
-        return try {
-            val serializer = type.serializer()
-            object : Serializer<I, String> {
-                val cbor = Cbor
-                override fun serialize(obj: I): String {
-                    return cbor.encodeToHexString(serializer, obj)
-                }
-
-                override fun deserialize(payload: String): I {
-                    return cbor.decodeFromHexString(serializer, payload)
-                }
+        return when (type) {
+            String::class -> object : Serializer<I, String> {
+                override fun serialize(obj: I): String = obj as String
+                override fun deserialize(payload: String): I = payload as I
             }
-        } catch (e: kotlinx.serialization.SerializationException) {
-            when (type) {
-                String::class -> object : Serializer<I, String> {
-                    override fun serialize(obj: I): String = obj as String
-                    override fun deserialize(payload: String): I = payload as I
-                }
-                else -> throw IllegalStateException(
-                    "$type is not marked with @Serializable and cannot be serialized automatically, please register this type with an explicit id serializer",
-                )
-            }
+            else -> throw IllegalStateException(
+                "$type cannot be serialized automatically, please register this type with an explicit id serializer",
+            )
         }
     }
 
