@@ -71,13 +71,13 @@ public class FileSystemConfigBuilder(
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     @Suppress("UNCHECKED_CAST")
     public fun <I : Any> createDefaultIdSerializer(type: KClass<I>): Serializer<I, String> {
-        when (type) {
+        return when (type) {
             String::class -> object : Serializer<I, String> {
                 override fun serialize(obj: I): String = obj as String
                 override fun deserialize(payload: String): I = payload as I
             }
             else -> throw IllegalStateException(
-                "$type is not marked with @Serializable and cannot be serialized automatically, please register this type with an explicit id serializer",
+                "$type cannot be serialized automatically, please register this type with an explicit id serializer",
             )
         }
     }
