@@ -97,17 +97,6 @@ public class FileSystemConfigBuilder(
                 )
             }
         }
-        return object : Serializer<I, String> {
-            override fun serialize(obj: I): String = when (type) {
-                String::class -> obj as String
-                else -> throw IllegalStateException("$type cannot be serialized automatically, please register this type with an explicit id serializer")
-            }
-
-            override fun deserialize(payload: String): I = when (type) {
-                String::class -> payload as I
-                else -> throw IllegalStateException("$type cannot be deserialized automatically, please register this type with an explicit id serializer")
-            }
-        }
     }
 
     internal fun build(): FileSystemConfig = FileSystemConfig(
