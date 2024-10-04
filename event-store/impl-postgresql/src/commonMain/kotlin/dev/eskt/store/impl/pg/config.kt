@@ -104,32 +104,18 @@ public class PostgresqlConfigBuilder(
     @Suppress("UNCHECKED_CAST")
     @OptIn(InternalSerializationApi::class)
     public fun <I : Any> createDefaultIdSerializer(type: KClass<I>): Serializer<I, String> {
-        return try {
-            val serializer = type.serializer()
-            object : Serializer<I, String> {
-                val json = Json
-                override fun serialize(obj: I): String {
-                    return json.encodeToString(serializer, obj)
-                }
-
-                override fun deserialize(payload: String): I {
-                    return json.decodeFromString(serializer, payload)
-                }
+        when (type) {
+            String::class -> object : Serializer<I, String> {
+                override fun serialize(obj: I): String = obj as String
+                override fun deserialize(payload: String): I = payload as I
             }
-        } catch (e: kotlinx.serialization.SerializationException) {
-            when (type) {
-                String::class -> object : Serializer<I, String> {
-                    override fun serialize(obj: I): String = obj as String
-                    override fun deserialize(payload: String): I = payload as I
-                }
-                UUID::class -> object : Serializer<I, String> {
-                    override fun serialize(obj: I): String = obj.toString()
-                    override fun deserialize(payload: String): I = UUID.fromString(payload) as I
-                }
-                else -> throw IllegalStateException(
-                    "$type is not marked with @Serializable and cannot be serialized automatically, please register this type with an explicit id serializer",
-                )
+            UUID::class -> object : Serializer<I, String> {
+                override fun serialize(obj: I): String = obj.toString()
+                override fun deserialize(payload: String): I = UUID.fromString(payload) as I
             }
+            else -> throw IllegalStateException(
+                "$type is not marked with @Serializable and cannot be serialized automatically, please register this type with an explicit id serializer",
+            )
         }
     }
 
