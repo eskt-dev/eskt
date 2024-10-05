@@ -1,6 +1,5 @@
-package dev.eskt.arch.hex.adapter.spring
+package dev.eskt.arch.hex.adapter.common
 
-import dev.eskt.arch.hex.adapter.common.BackoffStrategy
 import kotlin.time.Duration.Companion.seconds
 
 public data class EventListenerExecutorConfig(
@@ -9,4 +8,3 @@ public data class EventListenerExecutorConfig(
     public val batchSize: Int = 100,
     public val errorBackoff: BackoffStrategy = BackoffStrategy.Constant(15.seconds),
 )
-

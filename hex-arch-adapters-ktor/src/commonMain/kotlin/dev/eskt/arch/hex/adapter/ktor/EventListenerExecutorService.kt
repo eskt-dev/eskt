@@ -1,4 +1,4 @@
-package dev.eskt.arch.hex.adapter.spring
+package dev.eskt.arch.hex.adapter.ktor
 
 import dev.eskt.arch.hex.adapter.common.Bookmark
 import dev.eskt.arch.hex.adapter.common.EventListenerExecutorConfig
@@ -10,31 +10,39 @@ import dev.eskt.store.api.EventStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.DisposableBean
-import org.springframework.beans.factory.InitializingBean
-import org.springframework.stereotype.Component
-import org.springframework.transaction.support.TransactionTemplate
 
-@Component
 public class EventListenerExecutorService(
     private val eventStores: List<EventStore>,
     private val bookmark: Bookmark,
-    private val transactionTemplate: TransactionTemplate,
     private val singleStreamTypeEventListeners: List<SingleStreamTypeEventListener<*, *>>,
     private val multiStreamTypeEventListeners: List<MultiStreamTypeEventListener<*, *>>,
     private val config: EventListenerExecutorConfig = EventListenerExecutorConfig(),
-) : InitializingBean, DisposableBean {
-    private val logger: Logger = LoggerFactory.getLogger(EventListenerExecutorService::class.java)
+    private val debugLogger: (messageGenerator: () -> String) -> Unit,
+    private val infoLogger: (messageGenerator: () -> String) -> Unit,
+    private val errorLogger: (t: Throwable, messageGenerator: () -> String) -> Unit,
+) {
+    private val logger = object {
+        fun info(messageGenerator: () -> String) {
+            infoLogger(messageGenerator)
+        }
 
-    @OptIn(DelicateCoroutinesApi::class)
+        fun debug(messageGenerator: () -> String) {
+            debugLogger(messageGenerator)
+        }
+
+        fun error(t: Throwable, messageGenerator: () -> String) {
+            errorLogger(t, messageGenerator)
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     private val dispatcher = newFixedThreadPoolContext(config.threadPoolSize, config.threadPoolName)
     private val supervisor = SupervisorJob()
     private val scope = CoroutineScope(dispatcher + supervisor)
@@ -54,11 +62,11 @@ public class EventListenerExecutorService(
         }
     }
 
-    private fun init() {
-        logger.info(
+    public fun init() {
+        logger.info {
             "Starting listener processes for ${singleStreamTypeEventListeners.size} single event listeners " +
-                    "and ${multiStreamTypeEventListeners.size} multi event listeners...",
-        )
+                "and ${multiStreamTypeEventListeners.size} multi event listeners..."
+        }
 
         singleStreamTypeEventListeners.forEach { genericListener ->
             @Suppress("UNCHECKED_CAST")
@@ -79,7 +87,7 @@ public class EventListenerExecutorService(
         return scope.launch {
             var retry = 0
             while (!stopped) {
-                logger.info("Starting collection of events for $eventListener")
+                logger.info { "Starting collection of events for $eventListener" }
                 try {
                     eventStore
                         .singleStreamTypeEventFlow(
@@ -88,17 +96,16 @@ public class EventListenerExecutorService(
                             batchSize = config.batchSize,
                         )
                         .collect { envelope ->
-                            transactionTemplate.execute {
-                                eventListener.listen(envelope)
-                                bookmark.set(eventListener.id, envelope.position)
-                            }
+                            // TODO implement transaction support between the event listener and bookmark
+                            eventListener.listen(envelope)
+                            bookmark.set(eventListener.id, envelope.position)
                             if (retry > 0) retry = 0
-                            logger.debug("Processed event position {} of type {} in {}", envelope.position, envelope.event::class.qualifiedName, eventListener)
+                            logger.debug { "Processed event position ${envelope.position} of type ${envelope.event::class.qualifiedName} in $eventListener" }
                         }
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
                     val backoff = config.errorBackoff.backoff(++retry)
-                    logger.error("Error while collecting events in $eventListener, will try to restart in $backoff", e)
+                    logger.error(e) { "Error while collecting events in $eventListener, will try to restart in $backoff" }
                     if (!stopped) delay(backoff)
                 }
             }
@@ -112,7 +119,7 @@ public class EventListenerExecutorService(
         return scope.launch {
             var retry = 0
             while (!stopped) {
-                logger.info("Starting collection of events for $eventListener")
+                logger.info { "Starting collection of events for $eventListener" }
                 try {
                     eventStore
                         .multiStreamTypeEventFlow(
@@ -120,36 +127,27 @@ public class EventListenerExecutorService(
                             batchSize = config.batchSize,
                         )
                         .collect { envelope ->
-                            transactionTemplate.execute {
-                                eventListener.listen(envelope)
-                                bookmark.set(eventListener.id, envelope.position)
-                            }
+                            // TODO implement transaction support between the event listener and bookmark
+                            eventListener.listen(envelope)
+                            bookmark.set(eventListener.id, envelope.position)
                             if (retry > 0) retry = 0
-                            logger.debug("Processed event position {} of type {} in {}", envelope.position, envelope.event::class.qualifiedName, eventListener)
+                            logger.debug { "Processed event position ${envelope.position} of type ${envelope.event::class.qualifiedName} in $eventListener" }
                         }
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
                     val backoff = config.errorBackoff.backoff(++retry)
-                    logger.error("Error while collecting events in $eventListener, will try to restart in $backoff", e)
+                    logger.error(e) { "Error while collecting events in $eventListener, will try to restart in $backoff" }
                     if (!stopped) delay(backoff)
                 }
             }
         }
     }
 
-    private fun shutdown() {
-        logger.info("Shutting down...")
+    public fun shutdown() {
+        logger.info { "Shutting down..." }
         stopped = true
         supervisor.cancel("Shutting down")
         dispatcher.close()
-    }
-
-    override fun afterPropertiesSet() {
-        init()
-    }
-
-    override fun destroy() {
-        shutdown()
     }
 
     public suspend fun restartEventListener(id: String) {
