@@ -1,7 +1,7 @@
 package dev.eskt.example.app
 
 import dev.eskt.arch.hex.adapter.common.BackoffStrategy
-import dev.eskt.arch.hex.adapter.spring.EventListenerExecutorConfig
+import dev.eskt.arch.hex.adapter.common.EventListenerExecutorConfig
 import dev.eskt.store.api.EventStore
 import dev.eskt.store.impl.pg.PostgresqlEventStore
 import dev.eskt.store.test.w.car.CarStreamType
