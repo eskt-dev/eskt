@@ -8,4 +8,3 @@ public data class EventListenerExecutorConfig(
     public val batchSize: Int = 100,
     public val errorBackoff: BackoffStrategy = BackoffStrategy.Constant(15.seconds),
 )
-
