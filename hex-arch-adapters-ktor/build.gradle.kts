@@ -14,7 +14,6 @@ kotlin {
                 api(project(":hex-arch-ports"))
                 api(project(":hex-arch-adapters-common"))
 
-//                implementation(libs.slf4j.api)
                 implementation(libs.kotlinx.coroutines.core)
             }
         }
