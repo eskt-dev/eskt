@@ -1,7 +1,9 @@
 package dev.eskt.store.impl.fs
 
 import dev.eskt.store.api.EventEnvelope
+import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.EventStore
+import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
 
 public class FileSystemEventStore internal constructor(
@@ -26,5 +28,19 @@ public class FileSystemEventStore internal constructor(
 
     override fun <E, I> withStreamType(type: StreamType<E, I>): dev.eskt.store.api.StreamTypeHandler<E, I> {
         return dev.eskt.store.impl.common.base.StreamTypeHandler(type, storage)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    public fun <E, I> getPayloadSerializer(streamType: StreamType<E, I>): Serializer<E, ByteArray> {
+        return config.payloadSerializers[streamType] as Serializer<E, ByteArray>
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    public fun <E, I> getIdSerializer(streamType: StreamType<E, I>): Serializer<I, String> {
+        return config.idSerializers[streamType] as Serializer<I, String>
+    }
+
+    public fun getMetadataSerializer(): Serializer<EventMetadata, ByteArray> {
+        return config.eventMetadataSerializer
     }
 }
