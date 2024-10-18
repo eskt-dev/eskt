@@ -10,6 +10,7 @@ import org.junit.Test
 import java.util.UUID
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
+import kotlin.test.assertEquals
 
 internal class PostgresqlEventStorePublicConstructorTest {
     private val connectionConfig = generateTestConnectionConfig()
@@ -49,5 +50,19 @@ internal class PostgresqlEventStorePublicConstructorTest {
         val carStreamType = eventStore.withStreamType(CarStreamType)
         carStreamType.appendStream(newCarId, 0, listOf(CarProducedEvent(vin = "1233", producer = 1, make = "a", model = "b")))
         carStreamType.loadStream(newCarId)
+    }
+
+    @Test
+    fun `serializers are available for registered types`() {
+        val dataSource = connectionConfig.dataSource(closeables)
+        val eventStore = PostgresqlEventStore(dataSource, "event") {
+            registerStreamType(CarStreamType, idSerializer = CarStreamType.stringIdSerializer)
+        }
+
+        assertEquals(CarStreamType.stringIdSerializer, eventStore.getIdSerializer(CarStreamType))
+        val payloadSerializer = eventStore.getPayloadSerializer(CarStreamType)
+        val event = CarProducedEvent(vin = "1233", producer = 1, make = "a", model = "b")
+        val payload = payloadSerializer.serialize(event)
+        assertEquals(event, payloadSerializer.deserialize(payload))
     }
 }
