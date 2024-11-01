@@ -22,6 +22,7 @@ import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
+import kotlin.IllegalArgumentException
 
 @Component
 public class EventListenerExecutorService(
@@ -152,18 +153,24 @@ public class EventListenerExecutorService(
         shutdown()
     }
 
-    public suspend fun restartEventListener(id: String) {
-        if (stopped) return
+    public fun stopEventListener(id: String): Job {
+        if (stopped) return Job().also { it.complete() }
         val job = jobs[id] ?: throw IllegalArgumentException("No current jobs for event listener '$id'")
         job.cancel()
-        job.join()
+        return job
+    }
 
+    public fun startEventListener(id: String) {
         val eventListener = (singleStreamTypeEventListeners + multiStreamTypeEventListeners).single { it.id == id }
-
         @Suppress("UNCHECKED_CAST")
         jobs[eventListener.id] = when (eventListener) {
             is MultiStreamTypeEventListener<*, *> -> startJob(eventListener as MultiStreamTypeEventListener<Any, Any>)
             is SingleStreamTypeEventListener<*, *> -> startJob(eventListener as SingleStreamTypeEventListener<Any, Any>)
         }
+    }
+
+    public suspend fun restartEventListener(id: String) {
+        stopEventListener(id).join()
+        startEventListener(id)
     }
 }
