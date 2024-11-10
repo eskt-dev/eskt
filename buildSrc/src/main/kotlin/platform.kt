@@ -5,7 +5,7 @@ fun KotlinMultiplatformExtension.setupPlatforms(jvm: Boolean = true, native: Boo
 
     if (jvm) {
         jvm {
-            withJava()
+            // nothing
         }
     }
 
