@@ -1,5 +1,6 @@
 package dev.eskt.store.impl.pg
 
+import dev.eskt.store.impl.pg.PostgresqlStorage.DatabaseEntry
 import dev.eskt.store.storage.api.StorageVersionMismatchException
 import org.postgresql.util.PSQLState
 import java.sql.ResultSet
@@ -74,21 +75,32 @@ internal actual class DatabaseAdapter actual constructor(
         limit: Int,
         tableInfo: TableInfo,
     ): List<PostgresqlStorage.DatabaseEntry> {
+        return useEntriesByStreamIdAndVersion(streamId, sinceVersion, limit, tableInfo) { it.toList() }
+    }
+
+    actual fun <R> useEntriesByStreamIdAndVersion(
+        streamId: String,
+        sinceVersion: Int,
+        limit: Int,
+        tableInfo: TableInfo,
+        consume: (Sequence<DatabaseEntry>) -> R,
+    ): R {
         dataSource.connection.use { connection ->
             val stm = selectEventByStreamIdAndVersionSql(tableInfo)
-            connection.prepareStatement(stm)
-                .use { ps ->
-                    ps.setObject(1, streamId, java.sql.Types.OTHER)
-                    ps.setInt(2, sinceVersion)
-                    ps.setInt(3, limit)
-                    ps.executeQuery().use { rs ->
-                        return buildList {
+            connection.prepareStatement(stm).use { ps ->
+                ps.setObject(1, streamId, java.sql.Types.OTHER)
+                ps.setInt(2, sinceVersion)
+                ps.setInt(3, limit)
+                ps.executeQuery().use { rs ->
+                    return consume(
+                        sequence {
                             while (rs.next()) {
-                                add(rs.databaseEntry())
+                                yield(rs.databaseEntry())
                             }
-                        }
-                    }
+                        },
+                    )
                 }
+            }
         }
     }
 
