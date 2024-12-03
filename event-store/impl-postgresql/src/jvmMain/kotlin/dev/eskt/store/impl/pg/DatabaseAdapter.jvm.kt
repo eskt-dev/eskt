@@ -69,15 +69,6 @@ internal actual class DatabaseAdapter actual constructor(
         }
     }
 
-    actual fun getEntriesByStreamIdAndVersion(
-        streamId: String,
-        sinceVersion: Int,
-        limit: Int,
-        tableInfo: TableInfo,
-    ): List<PostgresqlStorage.DatabaseEntry> {
-        return useEntriesByStreamIdAndVersion(streamId, sinceVersion, limit, tableInfo) { it.toList() }
-    }
-
     actual fun <R> useEntriesByStreamIdAndVersion(
         streamId: String,
         sinceVersion: Int,

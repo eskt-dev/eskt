@@ -21,13 +21,6 @@ internal expect class DatabaseAdapter(dataSource: DataSource) {
         tableInfo: TableInfo,
     ): List<DatabaseEntry>
 
-    fun getEntriesByStreamIdAndVersion(
-        streamId: String,
-        sinceVersion: Int,
-        limit: Int = Int.MAX_VALUE,
-        tableInfo: TableInfo,
-    ): List<DatabaseEntry>
-
     fun <R> useEntriesByStreamIdAndVersion(
         streamId: String,
         sinceVersion: Int,

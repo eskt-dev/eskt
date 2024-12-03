@@ -32,12 +32,13 @@ internal class PostgresqlStorage(
 
     override fun <E, I> getStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
         if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
-        val entries = databaseAdapter.getEntriesByStreamIdAndVersion(
+        return databaseAdapter.useEntriesByStreamIdAndVersion(
             streamId = streamType.stringIdSerializer.serialize(streamId),
             sinceVersion = sinceVersion,
             tableInfo = config.tableInfo,
-        )
-        return entries.map { entry -> entry.toEventEnvelope() }
+        ) { entries ->
+            entries.map { entry -> entry.toEventEnvelope<E, I>() }.toList()
+        }
     }
 
     override fun <E, I, R> useStreamEvents(
@@ -51,10 +52,9 @@ internal class PostgresqlStorage(
             streamId = streamType.stringIdSerializer.serialize(streamId),
             sinceVersion = sinceVersion,
             tableInfo = config.tableInfo,
-            consume = { sequence: Sequence<DatabaseEntry> ->
-                consume(sequence.map { it.toEventEnvelope() })
-            },
-        )
+        ) { entries ->
+            consume(entries.map { it.toEventEnvelope() })
+        }
     }
 
     override fun <E, I> getEventByPosition(position: Long): EventEnvelope<E, I> {
@@ -83,13 +83,14 @@ internal class PostgresqlStorage(
 
     override fun <E, I> getEventByStreamVersion(streamType: StreamType<E, I>, streamId: I, version: Int): EventEnvelope<E, I> {
         if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
-        val entry = databaseAdapter.getEntriesByStreamIdAndVersion(
+        return databaseAdapter.useEntriesByStreamIdAndVersion(
             streamId = streamType.stringIdSerializer.serialize(streamId),
             sinceVersion = version - 1,
             limit = 1,
             tableInfo = config.tableInfo,
-        ).single()
-        return entry.toEventEnvelope()
+        ) { entries ->
+            entries.single().toEventEnvelope()
+        }
     }
 
     private fun <E, I> DatabaseEntry.toEventEnvelope(): EventEnvelope<E, I> {
