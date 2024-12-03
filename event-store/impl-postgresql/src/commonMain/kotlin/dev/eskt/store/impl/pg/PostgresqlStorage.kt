@@ -40,6 +40,23 @@ internal class PostgresqlStorage(
         return entries.map { entry -> entry.toEventEnvelope() }
     }
 
+    override fun <E, I, R> useStreamEvents(
+        streamType: StreamType<E, I>,
+        streamId: I,
+        sinceVersion: Int,
+        consume: (Sequence<EventEnvelope<E, I>>) -> R,
+    ): R {
+        if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
+        return databaseAdapter.useEntriesByStreamIdAndVersion(
+            streamId = streamType.stringIdSerializer.serialize(streamId),
+            sinceVersion = sinceVersion,
+            tableInfo = config.tableInfo,
+            consume = { sequence: Sequence<DatabaseEntry> ->
+                consume(sequence.map { it.toEventEnvelope() })
+            },
+        )
+    }
+
     override fun <E, I> getEventByPosition(position: Long): EventEnvelope<E, I> {
         val entry = databaseAdapter.getEntryByPosition(position, config.tableInfo)
         return entry.toEventEnvelope()

@@ -16,6 +16,10 @@ public class StreamTypeHandler<E, I>(
         return storage.getStreamEvents(streamType, streamId, sinceVersion)
     }
 
+    override fun <R> useStream(streamId: I, sinceVersion: Int, consume: (Sequence<EventEnvelope<E, I>>) -> R): R {
+        return storage.useStreamEvents(streamType, streamId, sinceVersion, consume)
+    }
+
     override fun appendStream(streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata): Int {
         try {
             storage.add(streamType, streamId, expectedVersion, events, metadata)

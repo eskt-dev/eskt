@@ -26,6 +26,19 @@ internal class InMemoryStorage(
             .map { it as EventEnvelope<E, I> }
     }
 
+    override fun <E, I, R> useStreamEvents(
+        streamType: StreamType<E, I>,
+        streamId: I,
+        sinceVersion: Int,
+        consume: (Sequence<EventEnvelope<E, I>>) -> R,
+    ): R {
+        val sequence = events.asSequence()
+            .filter { it.streamId == streamId }
+            .drop(sinceVersion)
+            .map { it as EventEnvelope<E, I> }
+        return consume(sequence)
+    }
+
     override fun <E, I> add(streamType: StreamType<E, I>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
         if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
         writeLock.withLock {

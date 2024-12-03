@@ -137,6 +137,17 @@ public class FileSystemStorage internal constructor(
         }
     }
 
+    public override fun <E, I, R> useStreamEvents(
+        streamType: StreamType<E, I>,
+        streamId: I,
+        sinceVersion: Int,
+        consume: (Sequence<EventEnvelope<E, I>>) -> R,
+    ): R {
+        // TODO optimize this implementation, we don't need to load the entire list
+        val events = getStreamEvents(streamType, streamId, sinceVersion)
+        return consume.invoke(events.asSequence())
+    }
+
     override fun <E, I> getEventByPosition(position: Long): EventEnvelope<E, I> {
         if (!fs.exists(posPath)) {
             throw IllegalStateException("Event store is empty, file $posPath does not exist")
