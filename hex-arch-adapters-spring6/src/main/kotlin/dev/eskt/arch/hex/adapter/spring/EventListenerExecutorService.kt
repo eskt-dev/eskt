@@ -30,8 +30,8 @@ public class EventListenerExecutorService(
     private val bookmark: Bookmark,
     private val singleStreamTypeEventListeners: List<SingleStreamTypeEventListener<*, *>>,
     private val multiStreamTypeEventListeners: List<MultiStreamTypeEventListener<*, *>>,
-    private val template: EventBatchTemplate = EventBatchTemplate.NoOp(),
     private val config: EventListenerExecutorConfig = EventListenerExecutorConfig(),
+    private val template: EventBatchTemplate = EventBatchTemplate.NoOp(),
 ) : InitializingBean, DisposableBean {
     private val logger: Logger = LoggerFactory.getLogger(EventListenerExecutorService::class.java)
 
