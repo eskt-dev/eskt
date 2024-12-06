@@ -1,6 +1,7 @@
 package dev.eskt.arch.hex.adapter.ktor
 
 import dev.eskt.arch.hex.adapter.common.Bookmark
+import dev.eskt.arch.hex.adapter.common.EventBatchTemplate
 import dev.eskt.arch.hex.adapter.common.EventListenerExecutorConfig
 import dev.eskt.arch.hex.adapter.common.multiStreamTypeEventFlow
 import dev.eskt.arch.hex.adapter.common.singleStreamTypeEventFlow
@@ -24,6 +25,7 @@ public class EventListenerExecutorService(
     private val singleStreamTypeEventListeners: List<SingleStreamTypeEventListener<*, *>>,
     private val multiStreamTypeEventListeners: List<MultiStreamTypeEventListener<*, *>>,
     private val config: EventListenerExecutorConfig = EventListenerExecutorConfig(),
+    private val template: EventBatchTemplate = EventBatchTemplate.NoOp(),
     private val debugLogger: (messageGenerator: () -> String) -> Unit,
     private val infoLogger: (messageGenerator: () -> String) -> Unit,
     private val errorLogger: (t: Throwable, messageGenerator: () -> String) -> Unit,
@@ -96,9 +98,10 @@ public class EventListenerExecutorService(
                             batchSize = config.batchSize,
                         )
                         .collect { envelope ->
-                            // TODO implement transaction support between the event listener and bookmark
-                            eventListener.listen(envelope)
-                            bookmark.set(eventListener.id, envelope.position)
+                            template.execute(eventStore, eventListener) {
+                                eventListener.listen(envelope)
+                                bookmark.set(eventListener.id, envelope.position)
+                            }
                             if (retry > 0) retry = 0
                             logger.debug { "Processed event position ${envelope.position} of type ${envelope.event::class.qualifiedName} in $eventListener" }
                         }
@@ -127,9 +130,10 @@ public class EventListenerExecutorService(
                             batchSize = config.batchSize,
                         )
                         .collect { envelope ->
-                            // TODO implement transaction support between the event listener and bookmark
-                            eventListener.listen(envelope)
-                            bookmark.set(eventListener.id, envelope.position)
+                            template.execute(eventStore, eventListener) {
+                                eventListener.listen(envelope)
+                                bookmark.set(eventListener.id, envelope.position)
+                            }
                             if (retry > 0) retry = 0
                             logger.debug { "Processed event position ${envelope.position} of type ${envelope.event::class.qualifiedName} in $eventListener" }
                         }
