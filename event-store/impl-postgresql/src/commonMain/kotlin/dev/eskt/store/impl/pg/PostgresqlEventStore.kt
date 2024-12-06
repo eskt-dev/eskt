@@ -36,6 +36,9 @@ public class PostgresqlEventStore internal constructor(
         return dev.eskt.store.impl.common.base.StreamTypeHandler(type, storage)
     }
 
+    public val dataSource: DataSource
+        get() = config.dataSource
+
     @Suppress("UNCHECKED_CAST")
     public fun <E, I> getPayloadSerializer(streamType: StreamType<E, I>): Serializer<E, String> {
         return config.payloadSerializers[streamType] as Serializer<E, String>
