@@ -14,16 +14,13 @@ internal class InMemoryStorage(
 ) : Storage {
     private val registeredTypes = config.registeredTypes.associateBy { it.id }
 
-    private val events = mutableListOf<EventEnvelope<Any, Any>>()
-    private val eventsByStreamId = mutableMapOf<Any, MutableList<EventEnvelope<Any, Any>>>()
+    private var events = listOf<EventEnvelope<Any, Any>>()
+    private var eventsByStreamId = mapOf<Any, List<EventEnvelope<Any, Any>>>()
 
     private val writeLock = reentrantLock()
 
     override fun <E, I> getStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
-        return events
-            .filter { it.streamId == streamId }
-            .drop(sinceVersion)
-            .map { it as EventEnvelope<E, I> }
+        return streamEvents<E, I>(streamId).drop(sinceVersion)
     }
 
     override fun <E, I, R> useStreamEvents(
@@ -32,26 +29,22 @@ internal class InMemoryStorage(
         sinceVersion: Int,
         consume: (Sequence<EventEnvelope<E, I>>) -> R,
     ): R {
-        val sequence = events.asSequence()
-            .filter { it.streamId == streamId }
-            .drop(sinceVersion)
-            .map { it as EventEnvelope<E, I> }
+        val sequence = streamEvents<E, I>(streamId).asSequence().drop(sinceVersion)
         return consume(sequence)
     }
 
     override fun <E, I> add(streamType: StreamType<E, I>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
         if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
         writeLock.withLock {
-            val streamEvents = eventsByStreamId[streamId as Any]
-                ?: mutableListOf<EventEnvelope<Any, Any>>().also { eventsByStreamId[streamId] = it }
+            val streamEvents = streamEvents<Any, Any>(streamId as Any)
             if (streamEvents.size != expectedVersion) {
                 throw StorageVersionMismatchException(currentVersion = streamEvents.size, expectedVersion = expectedVersion)
             }
-            events.forEachIndexed { index, event ->
-                val position = this.events.size + 1L
+            val envelopes = events.mapIndexed { index, event ->
+                val position = this.events.size + index + 1L
                 val version = expectedVersion + index + 1
 
-                val envelope = EventEnvelope(
+                EventEnvelope(
                     streamType = streamType as StreamType<Any, Any>,
                     streamId = streamId as Any,
                     version = version,
@@ -59,9 +52,10 @@ internal class InMemoryStorage(
                     metadata = metadata,
                     event = event as Any,
                 )
-                this.events.add(envelope)
-                streamEvents.add(envelope)
             }
+            // CoW both data storages so we optimise for reads without synchronization
+            this.eventsByStreamId += streamType to (streamEvents + envelopes)
+            this.events += envelopes
         }
     }
 
@@ -84,9 +78,10 @@ internal class InMemoryStorage(
     }
 
     override fun <E, I> getEventByStreamVersion(streamType: StreamType<E, I>, streamId: I, version: Int): EventEnvelope<E, I> {
-        val eventEnvelopes = eventsByStreamId[streamId as Any] as List<EventEnvelope<E, I>>
-        return eventEnvelopes[version - 1]
+        return streamEvents<E, I>(streamId)[version - 1]
     }
+
+    private fun <E, I> streamEvents(streamId: I): List<EventEnvelope<E, I>> = (eventsByStreamId[streamId as Any] ?: emptyList()) as List<EventEnvelope<E, I>>
 
     private fun sincePositionInt(sincePosition: Long) = when {
         sincePosition > Int.MAX_VALUE -> throw IllegalStateException("In-memory implementation can't really support more than Int.MAX_VALUE entries")
