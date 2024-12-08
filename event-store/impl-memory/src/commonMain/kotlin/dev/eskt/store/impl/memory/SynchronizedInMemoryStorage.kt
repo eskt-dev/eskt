@@ -9,18 +9,33 @@ import kotlinx.atomicfu.locks.reentrantLock
 import kotlinx.atomicfu.locks.withLock
 
 @Suppress("UNCHECKED_CAST")
-internal class InMemoryStorage(
+internal class SynchronizedInMemoryStorage(
     config: InMemoryConfig,
 ) : Storage {
     private val registeredTypes = config.registeredTypes.associateBy { it.id }
 
-    private var events = listOf<EventEnvelope<Any, Any>>()
-    private var eventsByStreamId = mapOf<Any, List<EventEnvelope<Any, Any>>>()
+    private val events = mutableListOf<EventEnvelope<Any, Any>>()
+    private val eventsByStreamId = mutableMapOf<Any, MutableList<EventEnvelope<Any, Any>>>()
 
     private val writeLock = reentrantLock()
 
+    private inline fun <T> withReadLock(block: () -> T): T {
+        // TODO we are currently using the same lock for reads which prevents readers to run in parallel
+        // CopyOnWriteInMemoryStorage is currently the only option to optimise for reads,
+        // we need some sort of common kotlin await/notify mechanism to allow a better synchronised storage
+        return writeLock.withLock {
+            block()
+        }
+    }
+
     override fun <E, I> getStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
-        return streamEvents<E, I>(streamId).drop(sinceVersion)
+        return streamEvents<E, I>(streamId).asSequence()
+            .drop(sinceVersion)
+            .let { sequence ->
+                withReadLock {
+                    sequence.toList()
+                }
+            }
     }
 
     override fun <E, I, R> useStreamEvents(
@@ -29,14 +44,20 @@ internal class InMemoryStorage(
         sinceVersion: Int,
         consume: (Sequence<EventEnvelope<E, I>>) -> R,
     ): R {
-        val sequence = streamEvents<E, I>(streamId).asSequence().drop(sinceVersion)
-        return consume(sequence)
+        return streamEvents<E, I>(streamId).asSequence()
+            .drop(sinceVersion)
+            .let { sequence ->
+                withReadLock {
+                    consume(sequence)
+                }
+            }
     }
 
     override fun <E, I> add(streamType: StreamType<E, I>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
         if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
         writeLock.withLock {
-            val streamEvents = streamEvents<Any, Any>(streamId as Any)
+            val streamEvents = eventsByStreamId[streamId as Any]
+                ?: mutableListOf<EventEnvelope<Any, Any>>().also { value -> eventsByStreamId[streamId as Any] = value }
             if (streamEvents.size != expectedVersion) {
                 throw StorageVersionMismatchException(currentVersion = streamEvents.size, expectedVersion = expectedVersion)
             }
@@ -53,8 +74,7 @@ internal class InMemoryStorage(
                     event = event as Any,
                 )
             }
-            // CoW both data storages so we optimise for reads without synchronization
-            this.eventsByStreamId += streamType to (streamEvents + envelopes)
+            streamEvents += envelopes
             this.events += envelopes
         }
     }
@@ -65,7 +85,11 @@ internal class InMemoryStorage(
         return events.asSequence()
             .drop(sincePositionInt(sincePosition))
             .take(batchSize)
-            .toList()
+            .let { sequence ->
+                withReadLock {
+                    sequence.toList()
+                }
+            }
     }
 
     override fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<E, I>): List<EventEnvelope<E, I>> {
@@ -74,14 +98,18 @@ internal class InMemoryStorage(
             .filter { it.streamType == streamType }
             .take(batchSize)
             .map { it as EventEnvelope<E, I> }
-            .toList()
+            .let { sequence ->
+                withReadLock {
+                    sequence.toList()
+                }
+            }
     }
 
     override fun <E, I> getEventByStreamVersion(streamType: StreamType<E, I>, streamId: I, version: Int): EventEnvelope<E, I> {
         return streamEvents<E, I>(streamId)[version - 1]
     }
 
-    private fun <E, I> streamEvents(streamId: I): List<EventEnvelope<E, I>> = (eventsByStreamId[streamId as Any] ?: emptyList()) as List<EventEnvelope<E, I>>
+    private fun <E, I> streamEvents(streamId: I) = (eventsByStreamId[streamId as Any] ?: mutableListOf()) as List<EventEnvelope<E, I>>
 
     private fun sincePositionInt(sincePosition: Long) = when {
         sincePosition > Int.MAX_VALUE -> throw IllegalStateException("In-memory implementation can't really support more than Int.MAX_VALUE entries")
