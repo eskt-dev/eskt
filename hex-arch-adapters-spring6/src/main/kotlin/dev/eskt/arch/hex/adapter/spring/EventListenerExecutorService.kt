@@ -1,5 +1,6 @@
 package dev.eskt.arch.hex.adapter.spring
 
+import dev.eskt.arch.hex.adapter.common.EventBatchTemplate
 import dev.eskt.arch.hex.adapter.common.Bookmark
 import dev.eskt.arch.hex.adapter.common.EventListenerExecutorConfig
 import dev.eskt.arch.hex.adapter.common.multiStreamTypeEventFlow
@@ -21,17 +22,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.stereotype.Component
-import org.springframework.transaction.support.TransactionTemplate
 import kotlin.IllegalArgumentException
 
 @Component
 public class EventListenerExecutorService(
     private val eventStores: List<EventStore>,
     private val bookmark: Bookmark,
-    private val transactionTemplate: TransactionTemplate,
     private val singleStreamTypeEventListeners: List<SingleStreamTypeEventListener<*, *>>,
     private val multiStreamTypeEventListeners: List<MultiStreamTypeEventListener<*, *>>,
     private val config: EventListenerExecutorConfig = EventListenerExecutorConfig(),
+    private val template: EventBatchTemplate = EventBatchTemplate.NoOp(),
 ) : InitializingBean, DisposableBean {
     private val logger: Logger = LoggerFactory.getLogger(EventListenerExecutorService::class.java)
 
@@ -89,7 +89,7 @@ public class EventListenerExecutorService(
                             batchSize = config.batchSize,
                         )
                         .collect { envelope ->
-                            transactionTemplate.execute {
+                            template.execute(eventStore, eventListener) {
                                 eventListener.listen(envelope)
                                 bookmark.set(eventListener.id, envelope.position)
                             }
@@ -121,7 +121,7 @@ public class EventListenerExecutorService(
                             batchSize = config.batchSize,
                         )
                         .collect { envelope ->
-                            transactionTemplate.execute {
+                            template.execute(eventStore, eventListener) {
                                 eventListener.listen(envelope)
                                 bookmark.set(eventListener.id, envelope.position)
                             }
