@@ -2,7 +2,7 @@ package dev.eskt.arch.hex.adapter.common
 
 import kotlin.time.Duration
 
-public interface BackoffStrategy {
+public fun interface BackoffStrategy {
     /**
      * Provides the backoff duration before the given n-th retry.
      * The [retry] parameter represents the retry attempt and is guaranteed to be >= 1,
