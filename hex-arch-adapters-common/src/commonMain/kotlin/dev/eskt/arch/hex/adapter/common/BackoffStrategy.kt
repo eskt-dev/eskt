@@ -2,6 +2,7 @@ package dev.eskt.arch.hex.adapter.common
 
 import kotlin.math.pow
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 public fun interface BackoffStrategy {
@@ -20,7 +21,7 @@ public fun interface BackoffStrategy {
         override fun backoff(retry: Int): Duration = duration
     }
 
-    public data class Exponential(val base: Double = 2.0, val maximumDelay: Duration = 60.seconds) : BackoffStrategy {
+    public data class Exponential(val base: Double = 2.0, val maximumDelay: Duration = 5.minutes) : BackoffStrategy {
         init {
             check(base > 0)
             check(maximumDelay.isPositive())
