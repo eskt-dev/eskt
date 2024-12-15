@@ -4,10 +4,8 @@ import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
 import dev.eskt.store.impl.common.binary.serialization.DefaultEventMetadataSerializer
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.*
 import kotlinx.serialization.protobuf.ProtoBuf
-import kotlinx.serialization.serializer
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.reflect.KClass
@@ -27,6 +25,9 @@ public class FileSystemConfigBuilder(
     private val payloadSerializers = mutableMapOf<StreamType<*, *>, Serializer<*, ByteArray>>()
     private val idSerializers = mutableMapOf<StreamType<*, *>, Serializer<*, String>>()
     private var eventMetadataSerializer: Serializer<EventMetadata, ByteArray> = DefaultEventMetadataSerializer
+
+    @OptIn(ExperimentalSerializationApi::class)
+    public var serialFormat: BinaryFormat = ProtoBuf.Default
 
     public fun <E, I, T> registerStreamTypeWith(streamType: T, payloadSerializer: Serializer<E, ByteArray>, idSerializer: Serializer<I, String>)
     where T : StreamType<E, I> {
@@ -48,27 +49,27 @@ public class FileSystemConfigBuilder(
         this.eventMetadataSerializer = eventMetadataSerializer
     }
 
-    @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+    @OptIn(InternalSerializationApi::class)
     public fun <E : Any> createDefaultPayloadSerializer(type: KClass<E>): Serializer<E, ByteArray> {
-        return object : Serializer<E, ByteArray> {
-            val proto = ProtoBuf.Default
-            val serializer = try {
+        return KotlinxSerializationSerializableAdapter(
+            try {
                 type.serializer()
-            } catch (e: kotlinx.serialization.SerializationException) {
+            } catch (e: SerializationException) {
                 throw IllegalStateException("$type is not marked with @Serializable, please register this type with an explicit serializer", e)
-            }
+            },
+        )
+    }
 
-            override fun serialize(obj: E): ByteArray {
-                return proto.encodeToByteArray(serializer, obj)
-            }
+    private inner class KotlinxSerializationSerializableAdapter<E>(private val serializer: KSerializer<E>) : Serializer<E, ByteArray> {
+        override fun serialize(obj: E): ByteArray {
+            return serialFormat.encodeToByteArray(serializer, obj)
+        }
 
-            override fun deserialize(payload: ByteArray): E {
-                return proto.decodeFromByteArray(serializer, payload)
-            }
+        override fun deserialize(payload: ByteArray): E {
+            return serialFormat.decodeFromByteArray(serializer, payload)
         }
     }
 
-    @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     @Suppress("UNCHECKED_CAST")
     public fun <I : Any> createDefaultIdSerializer(type: KClass<I>): Serializer<I, String> {
         return when (type) {

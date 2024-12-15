@@ -18,6 +18,12 @@ public class FileSystemEventStore internal constructor(
 
     override val registeredTypes: Set<StreamType<*, *>> = config.registeredTypes.toSet()
 
+    public val basePath: String = storage.basePath.toString()
+
+    public fun initStorage() {
+        storage.initStorage()
+    }
+
     override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
         return storage.loadEventBatch(sincePosition, batchSize)
     }
