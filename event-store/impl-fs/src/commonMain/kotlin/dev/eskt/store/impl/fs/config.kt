@@ -8,8 +8,8 @@ import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.serializer
 import okio.Path
 import okio.Path.Companion.toPath
