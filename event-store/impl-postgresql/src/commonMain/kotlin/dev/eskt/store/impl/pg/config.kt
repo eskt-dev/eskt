@@ -5,6 +5,9 @@ import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
 import dev.eskt.store.impl.common.string.serialization.DefaultEventMetadataSerializer
 import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import java.util.UUID
@@ -61,6 +64,8 @@ public class PostgresqlConfigBuilder(
     private val idSerializers = mutableMapOf<StreamType<*, *>, Serializer<*, String>>()
     private var eventMetadataSerializer: Serializer<EventMetadata, String> = DefaultEventMetadataSerializer
 
+    public var serialFormat: StringFormat = Json.Default
+
     public fun <E, I, T> registerStreamTypeWith(streamType: T, payloadSerializer: Serializer<E, String>, idSerializer: Serializer<I, String>)
     where T : StreamType<E, I> {
         registeredTypes += streamType as StreamType<*, *>
@@ -83,22 +88,18 @@ public class PostgresqlConfigBuilder(
 
     @OptIn(InternalSerializationApi::class)
     public fun <E : Any> createDefaultPayloadSerializer(type: KClass<E>): Serializer<E, String> {
-        return object : Serializer<E, String> {
-            val json = Json
-            val serializer = try {
+        return KotlinxSerializationSerializableAdapter(
+            try {
                 type.serializer()
-            } catch (e: kotlinx.serialization.SerializationException) {
+            } catch (e: SerializationException) {
                 throw IllegalStateException("$type is not marked with @Serializable, please register this type with an explicit serializer", e)
-            }
+            },
+        )
+    }
 
-            override fun serialize(obj: E): String {
-                return json.encodeToString(serializer, obj)
-            }
-
-            override fun deserialize(payload: String): E {
-                return json.decodeFromString(serializer, payload)
-            }
-        }
+    private inner class KotlinxSerializationSerializableAdapter<E>(private val serializer: KSerializer<E>) : Serializer<E, String> {
+        override fun serialize(obj: E): String = serialFormat.encodeToString(serializer, obj)
+        override fun deserialize(payload: String): E = serialFormat.decodeFromString(serializer, payload)
     }
 
     @Suppress("UNCHECKED_CAST")

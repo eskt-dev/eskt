@@ -22,7 +22,17 @@ import okio.withLock
 public class FileSystemStorage internal constructor(
     private val config: FileSystemConfig,
 ) : Storage {
-    private val basePath = config.basePath
+    internal val basePath: Path
+
+    init {
+        if (!fs.exists(config.basePath)) {
+            fs.createDirectories(config.basePath)
+        }
+        basePath = fs.canonicalize(config.basePath)
+
+        // TODO implement data -> index sync check
+    }
+
     private val eventMetadataSerializer = config.eventMetadataSerializer
     private val registeredTypes = config.registeredTypes.associateBy { it.id }
 
@@ -33,11 +43,14 @@ public class FileSystemStorage internal constructor(
         private const val POSITION_ENTRY_SIZE_IN_BYTES: Long = (Long.SIZE_BYTES).toLong()
     }
 
-    private val walPath = basePath / "wal"
+    private val dataPath = basePath / "dat"
     private val posPath = basePath / "pos"
 
-    init {
-        // TODO implement wal -> index sync check
+    internal fun initStorage() {
+        if (!fs.exists(dataPath) && !fs.exists(posPath)) {
+            fs.sink(dataPath).buffer().use { }
+            fs.sink(posPath).buffer().use { }
+        }
     }
 
     override fun <E, I> add(streamType: StreamType<E, I>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
@@ -47,7 +60,7 @@ public class FileSystemStorage internal constructor(
 
         // creating payloads in serialized form before acquiring any locks
         val metadataPayload = eventMetadataSerializer.serialize(metadata)
-        val walEntries = events.mapIndexed { index, event ->
+        val dataEntries = events.mapIndexed { index, event ->
             val eventPayload = streamType.binaryEventSerializer.serialize(event)
             val walEntry = WalEntry(
                 type = streamType.id,
@@ -65,52 +78,57 @@ public class FileSystemStorage internal constructor(
                     throw StorageVersionMismatchException((streamHandle.size() / STREAM_ENTRY_SIZE_IN_BYTES).toInt(), expectedVersion)
                 }
 
-                val walAddresses = fs.openReadWrite(walPath).use { walHandle ->
-                    walHandle.lock.withLock {
+                val dataAddresses = fs.openReadWrite(dataPath).use { dataHandle ->
+                    dataHandle.lock.withLock {
                         // calculate position based on previous wal entry
-                        val walAddressFirstEvent = walHandle.size()
-                        val position = if (walAddressFirstEvent > 0) {
-                            val positionLastEntry = walHandle.readLong(walAddressFirstEvent - 8)
-                            positionLastEntry + 1
+                        val dataAddressFirstAppend = dataHandle.size()
+                        val positionFirstAppend = 1L + if (dataAddressFirstAppend > 0) {
+                            dataHandle.source(dataAddressFirstAppend - Long.SIZE_BYTES).use { s ->
+                                s.buffer().use { it.readLong() }
+                            }
                         } else {
-                            1L
+                            0L
                         }
 
-                        val walAddresses = mutableListOf(walAddressFirstEvent)
+                        val newDataAddresses = mutableListOf(dataAddressFirstAppend)
 
-                        // write wal entry
+                        // write wal entry buffer
                         val walBuffer = Buffer()
-                        walEntries.forEachIndexed { index, walEntryBytes ->
+                        dataEntries.forEachIndexed { index, walEntryBytes ->
                             walBuffer.writeInt(walEntryBytes.size)
                             walBuffer.write(walEntryBytes)
                             walBuffer.writeInt(walEntryBytes.size)
-                            walBuffer.writeLong(position + index)
-                            walAddresses.add(walAddresses.last() + 4 + walEntryBytes.size + 4 + 8)
+                            walBuffer.writeLong(positionFirstAppend + index)
+                            newDataAddresses.add(newDataAddresses.last() + 4 + walEntryBytes.size + 4 + 8)
                         }
-                        walHandle.appendingSink().apply {
-                            write(walBuffer, walBuffer.size)
-                            flush()
-                        }
-                        walAddresses.removeLast()
+                        newDataAddresses.removeLast() // an extra address is always added
 
-                        // write position index
+                        dataHandle.appendingSink().use { s ->
+                            s.write(walBuffer, walBuffer.size)
+                        }
+
+                        // write position index buffer
+                        val posBuffer = Buffer()
+                        newDataAddresses.forEach { walAddress ->
+                            posBuffer.writeLong(walAddress)
+                        }
                         fs.openReadWrite(posPath).use { posHandle ->
-                            val posBuffer = Buffer()
-                            walAddresses.forEach { walAddress ->
-                                posBuffer.writeLong(walAddress)
+                            posHandle.appendingSink().use { s ->
+                                s.write(posBuffer, posBuffer.size)
                             }
-                            posHandle.appendingSink().write(posBuffer, posBuffer.size)
                         }
 
-                        walAddresses
+                        newDataAddresses
                     }
                 }
                 // write stream index
                 val streamBuffer = Buffer()
-                walAddresses.forEach { walAddress ->
+                dataAddresses.forEach { walAddress ->
                     streamBuffer.writeLong(walAddress)
                 }
-                streamHandle.appendingSink().write(streamBuffer, streamBuffer.size)
+                streamHandle.appendingSink().use { s ->
+                    s.write(streamBuffer, streamBuffer.size)
+                }
             }
         }
     }
@@ -125,7 +143,7 @@ public class FileSystemStorage internal constructor(
 
         fs.openReadOnly(streamPath).use { streamHandle ->
             val streamSource = streamHandle.source(sinceVersion * STREAM_ENTRY_SIZE_IN_BYTES).buffer()
-            fs.openReadOnly(walPath).use { walHandle ->
+            fs.openReadOnly(dataPath).use { walHandle ->
                 return buildList {
                     while (!streamSource.exhausted()) {
                         val addr = streamSource.readLong()
@@ -156,7 +174,7 @@ public class FileSystemStorage internal constructor(
         return fs.openReadOnly(posPath).use { posHandle ->
             val posSource = posHandle.source((position - 1) * POSITION_ENTRY_SIZE_IN_BYTES).buffer()
             val addr = posSource.readLong()
-            fs.openReadOnly(walPath).use { walHandle ->
+            fs.openReadOnly(dataPath).use { walHandle ->
                 walHandle.readEventEnvelopeAt(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
             }
         }
@@ -176,17 +194,18 @@ public class FileSystemStorage internal constructor(
         }
 
         fs.openReadOnly(posPath).use { posHandle ->
-            val posSource = posHandle.source(sincePosition * POSITION_ENTRY_SIZE_IN_BYTES).buffer()
-            fs.openReadOnly(walPath).use { walHandle ->
-                var added = 0
-                return buildList {
-                    while (!posSource.exhausted()) {
-                        val addr = posSource.readLong()
-                        val envelope = walHandle.readEventEnvelopeAt<E, I>(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
-                        if (streamType == null || streamType == envelope.streamType) {
-                            add(envelope)
-                            added++
-                            if (added == batchSize) break
+            posHandle.source(sincePosition * POSITION_ENTRY_SIZE_IN_BYTES).buffer().use { posSource ->
+                fs.openReadOnly(dataPath).use { walHandle ->
+                    var added = 0
+                    return buildList {
+                        while (!posSource.exhausted()) {
+                            val addr = posSource.readLong()
+                            val envelope = walHandle.readEventEnvelopeAt<E, I>(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
+                            if (streamType == null || streamType == envelope.streamType) {
+                                add(envelope)
+                                added++
+                                if (added == batchSize) break
+                            }
                         }
                     }
                 }
@@ -206,7 +225,7 @@ public class FileSystemStorage internal constructor(
         return fs.openReadOnly(streamPath).use { streamHandle ->
             val streamSource = streamHandle.source((version - 1) * STREAM_ENTRY_SIZE_IN_BYTES).buffer()
             val addr = streamSource.readLong()
-            fs.openReadOnly(walPath).use { walHandle ->
+            fs.openReadOnly(dataPath).use { walHandle ->
                 walHandle.readEventEnvelopeAt(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
             }
         }
@@ -219,8 +238,7 @@ public class FileSystemStorage internal constructor(
     private fun <E, I> FileHandle.readEventEnvelopeAt(
         addr: Long,
         streamTypeFinder: (typeId: String) -> StreamType<E, I>,
-    ): EventEnvelope<E, I> {
-        val walBuffer = source(addr).buffer()
+    ): EventEnvelope<E, I> = source(addr).buffer().use { walBuffer ->
         val entrySize = walBuffer.readInt()
         val walEntryByteArray = walBuffer.readByteArray(entrySize.toLong())
         val walEntry = walEntrySerializer.decodeFromByteArray(WalEntry.serializer(), walEntryByteArray)
