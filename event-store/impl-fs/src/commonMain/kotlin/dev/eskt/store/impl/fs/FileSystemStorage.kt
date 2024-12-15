@@ -238,25 +238,23 @@ public class FileSystemStorage internal constructor(
     private fun <E, I> FileHandle.readEventEnvelopeAt(
         addr: Long,
         streamTypeFinder: (typeId: String) -> StreamType<E, I>,
-    ): EventEnvelope<E, I> {
-        source(addr).buffer().use { walBuffer ->
-            val entrySize = walBuffer.readInt()
-            val walEntryByteArray = walBuffer.readByteArray(entrySize.toLong())
-            val walEntry = walEntrySerializer.decodeFromByteArray(WalEntry.serializer(), walEntryByteArray)
-            walBuffer.readInt() // ignore second copy of the entry size
-            val position = walBuffer.readLong()
+    ): EventEnvelope<E, I> = source(addr).buffer().use { walBuffer ->
+        val entrySize = walBuffer.readInt()
+        val walEntryByteArray = walBuffer.readByteArray(entrySize.toLong())
+        val walEntry = walEntrySerializer.decodeFromByteArray(WalEntry.serializer(), walEntryByteArray)
+        walBuffer.readInt() // ignore second copy of the entry size
+        val position = walBuffer.readLong()
 
-            val streamType = streamTypeFinder(walEntry.type)
+        val streamType = streamTypeFinder(walEntry.type)
 
-            return EventEnvelope(
-                streamType,
-                streamType.stringIdSerializer.deserialize(walEntry.id),
-                walEntry.version,
-                position,
-                eventMetadataSerializer.deserialize(walEntry.metadataPayload),
-                streamType.binaryEventSerializer.deserialize(walEntry.eventPayload),
-            )
-        }
+        return EventEnvelope(
+            streamType,
+            streamType.stringIdSerializer.deserialize(walEntry.id),
+            walEntry.version,
+            position,
+            eventMetadataSerializer.deserialize(walEntry.metadataPayload),
+            streamType.binaryEventSerializer.deserialize(walEntry.eventPayload),
+        )
     }
 
     private fun <I> toPathComponent(streamId: I, serializer: Serializer<I, String>): Path {
