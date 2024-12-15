@@ -4,8 +4,13 @@ import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
 import dev.eskt.store.impl.common.binary.serialization.DefaultEventMetadataSerializer
-import kotlinx.serialization.*
+import kotlinx.serialization.BinaryFormat
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.protobuf.ProtoBuf
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.serializer
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.reflect.KClass
