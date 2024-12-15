@@ -93,7 +93,7 @@ public class PostgresqlConfigBuilder(
                 type.serializer()
             } catch (e: SerializationException) {
                 throw IllegalStateException("$type is not marked with @Serializable, please register this type with an explicit serializer", e)
-            }
+            },
         )
     }
 
