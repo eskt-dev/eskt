@@ -16,8 +16,11 @@ ktlint_code_style = ktlint_official
 ktlint_standard_filename = disabled
 ktlint_standard_blank-line-before-declaration = disabled # ktlint_official only, force many unnecessary blank lines
 ktlint_standard_multiline-expression-wrapping = disabled # ktlint_official only, all multiline expressions on next line don't look good
+ktlint_standard_chain-method-continuation = disabled # wrapping is weird, does not for multiline expressions to go to the next line
 ktlint_standard_string-template-indent = disabled # needs to be disabled if multiline-expression-wrapping is disabled
+ktlint_standard_class-signature = disabled # let just parameter-list-wrapping apply, which takes care of longer constructors only
 ktlint_standard_function-signature = disabled # let just parameter-list-wrapping apply, which takes care of longer functions only
+ktlint_standard_function-expression-body = disabled # does not look good for complex delegations in the expression body
 
 ktlint_ignore_back_ticked_identifier = true
 ktlint_function_signature_body_expression_wrapping = default
