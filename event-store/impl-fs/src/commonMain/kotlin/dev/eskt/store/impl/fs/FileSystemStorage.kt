@@ -166,20 +166,6 @@ public class FileSystemStorage internal constructor(
         return consume.invoke(events.asSequence())
     }
 
-    override fun <E, I> getEventByPosition(position: Long): EventEnvelope<E, I> {
-        if (!fs.exists(posPath)) {
-            throw IllegalStateException("Event store is empty, file $posPath does not exist")
-        }
-
-        return fs.openReadOnly(posPath).use { posHandle ->
-            val posSource = posHandle.source((position - 1) * POSITION_ENTRY_SIZE_IN_BYTES).buffer()
-            val addr = posSource.readLong()
-            fs.openReadOnly(dataPath).use { walHandle ->
-                walHandle.readEventEnvelopeAt(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
-            }
-        }
-    }
-
     override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
         return loadEventBatchInternal(sincePosition, batchSize, null)
     }
@@ -209,24 +195,6 @@ public class FileSystemStorage internal constructor(
                         }
                     }
                 }
-            }
-        }
-    }
-
-    override fun <E, I> getEventByStreamVersion(streamType: StreamType<E, I>, streamId: I, version: Int): EventEnvelope<E, I> {
-        if (streamType.id !in registeredTypes) throwIfNotRegistered(streamType.id)
-
-        val streamPath = basePath / toPathComponent(streamId, streamType.stringIdSerializer)
-
-        if (!fs.exists(streamPath)) {
-            throw IllegalStateException("Stream $streamId is empty, file $streamPath does not exist")
-        }
-
-        return fs.openReadOnly(streamPath).use { streamHandle ->
-            val streamSource = streamHandle.source((version - 1) * STREAM_ENTRY_SIZE_IN_BYTES).buffer()
-            val addr = streamSource.readLong()
-            fs.openReadOnly(dataPath).use { walHandle ->
-                walHandle.readEventEnvelopeAt(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
             }
         }
     }
