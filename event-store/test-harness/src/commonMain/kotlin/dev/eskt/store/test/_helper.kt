@@ -15,5 +15,7 @@ internal fun <E, I> Storage.getEventByPosition(position: Long): EventEnvelope<E,
 }
 
 internal fun <E, I> Storage.getEventByStreamVersion(streamType: StreamType<E, I>, streamId: I, version: Int): EventEnvelope<E, I> {
-    return getStreamEvents(streamType, streamId, version - 1).first()
+    return useStreamEvents(streamType, streamId, version - 1) { stream ->
+        stream.first()
+    }
 }

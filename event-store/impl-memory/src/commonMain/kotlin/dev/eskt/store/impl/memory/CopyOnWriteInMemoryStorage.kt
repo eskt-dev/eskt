@@ -19,10 +19,6 @@ internal class CopyOnWriteInMemoryStorage(
 
     private val writeLock = reentrantLock()
 
-    override fun <E, I> getStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
-        return streamEvents<E, I>(streamId).drop(sinceVersion)
-    }
-
     override fun <E, I, R> useStreamEvents(
         streamType: StreamType<E, I>,
         streamId: I,

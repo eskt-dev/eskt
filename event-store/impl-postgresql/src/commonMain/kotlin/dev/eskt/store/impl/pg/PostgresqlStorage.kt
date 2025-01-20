@@ -30,17 +30,6 @@ internal class PostgresqlStorage(
         databaseAdapter.persistEntries(serializedId, expectedVersion, entries, config.tableInfo)
     }
 
-    override fun <E, I> getStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
-        if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
-        return databaseAdapter.useEntriesByStreamIdAndVersion(
-            streamId = streamType.stringIdSerializer.serialize(streamId),
-            sinceVersion = sinceVersion,
-            tableInfo = config.tableInfo,
-        ) { entries ->
-            entries.map { entry -> entry.toEventEnvelope<E, I>() }.toList()
-        }
-    }
-
     override fun <E, I, R> useStreamEvents(
         streamType: StreamType<E, I>,
         streamId: I,

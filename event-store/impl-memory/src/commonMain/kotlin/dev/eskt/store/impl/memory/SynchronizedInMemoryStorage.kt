@@ -28,16 +28,6 @@ internal class SynchronizedInMemoryStorage(
         }
     }
 
-    override fun <E, I> getStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
-        return streamEvents<E, I>(streamId).asSequence()
-            .drop(sinceVersion)
-            .let { sequence ->
-                withReadLock {
-                    sequence.toList()
-                }
-            }
-    }
-
     override fun <E, I, R> useStreamEvents(
         streamType: StreamType<E, I>,
         streamId: I,

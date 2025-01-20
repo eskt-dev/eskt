@@ -133,37 +133,34 @@ public class FileSystemStorage internal constructor(
         }
     }
 
-    override fun <E, I> getStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
-        if (streamType.id !in registeredTypes) throwIfNotRegistered(streamType.id)
-        val streamPath = basePath / toPathComponent(streamId, streamType.stringIdSerializer)
-
-        if (!fs.exists(streamPath)) {
-            return emptyList()
-        }
-
-        fs.openReadOnly(streamPath).use { streamHandle ->
-            val streamSource = streamHandle.source(sinceVersion * STREAM_ENTRY_SIZE_IN_BYTES).buffer()
-            fs.openReadOnly(dataPath).use { walHandle ->
-                return buildList {
-                    while (!streamSource.exhausted()) {
-                        val addr = streamSource.readLong()
-                        val envelope = walHandle.readEventEnvelopeAt<E, I>(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
-                        add(envelope)
-                    }
-                }
-            }
-        }
-    }
-
-    public override fun <E, I, R> useStreamEvents(
+    override fun <E, I, R> useStreamEvents(
         streamType: StreamType<E, I>,
         streamId: I,
         sinceVersion: Int,
         consume: (Sequence<EventEnvelope<E, I>>) -> R,
     ): R {
-        // TODO optimize this implementation, we don't need to load the entire list
-        val events = getStreamEvents(streamType, streamId, sinceVersion)
-        return consume.invoke(events.asSequence())
+        if (streamType.id !in registeredTypes) throwIfNotRegistered(streamType.id)
+        val streamPath = basePath / toPathComponent(streamId, streamType.stringIdSerializer)
+
+        if (!fs.exists(streamPath)) {
+            return consume(emptySequence())
+        }
+
+        fs.openReadOnly(streamPath).use { streamHandle ->
+            streamHandle.source(sinceVersion * STREAM_ENTRY_SIZE_IN_BYTES).buffer().use { streamSource ->
+                fs.openReadOnly(dataPath).use { walHandle ->
+                    return consume(
+                        sequence {
+                            while (!streamSource.exhausted()) {
+                                val addr = streamSource.readLong()
+                                val envelope = walHandle.readEventEnvelopeAt<E, I>(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
+                                yield(envelope)
+                            }
+                        },
+                    )
+                }
+            }
+        }
     }
 
     override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
