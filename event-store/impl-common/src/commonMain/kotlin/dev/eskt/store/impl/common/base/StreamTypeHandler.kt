@@ -13,7 +13,9 @@ public class StreamTypeHandler<E, I>(
     private val storage: Storage,
 ) : StreamTypeHandler<E, I> {
     override fun loadStream(streamId: I, sinceVersion: Int): List<EventEnvelope<E, I>> {
-        return storage.getStreamEvents(streamType, streamId, sinceVersion)
+        return storage.useStreamEvents(streamType, streamId, sinceVersion) { stream ->
+            stream.toList()
+        }
     }
 
     override fun <R> useStream(streamId: I, sinceVersion: Int, consume: (Sequence<EventEnvelope<E, I>>) -> R): R {
