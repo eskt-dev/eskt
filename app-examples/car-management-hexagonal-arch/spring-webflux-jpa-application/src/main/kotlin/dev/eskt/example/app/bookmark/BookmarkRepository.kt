@@ -1,6 +1,6 @@
 package dev.eskt.example.app.bookmark
 
-import dev.eskt.arch.hex.adapter.common.Bookmark
+import dev.eskt.arch.hex.port.Bookmark
 import org.springframework.data.jpa.repository.JpaRepository
 import kotlin.jvm.optionals.getOrNull
 

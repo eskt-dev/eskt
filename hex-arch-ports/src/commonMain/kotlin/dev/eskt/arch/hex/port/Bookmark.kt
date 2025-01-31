@@ -1,4 +1,4 @@
-package dev.eskt.arch.hex.adapter.common
+package dev.eskt.arch.hex.port
 
 public interface Bookmark {
     public fun get(id: String): Long
