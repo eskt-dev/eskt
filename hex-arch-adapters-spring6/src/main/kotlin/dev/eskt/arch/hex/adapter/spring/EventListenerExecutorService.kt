@@ -1,7 +1,7 @@
 package dev.eskt.arch.hex.adapter.spring
 
 import dev.eskt.arch.hex.adapter.common.EventBatchTemplate
-import dev.eskt.arch.hex.adapter.common.Bookmark
+import dev.eskt.arch.hex.port.Bookmark
 import dev.eskt.arch.hex.adapter.common.EventListenerExecutorConfig
 import dev.eskt.arch.hex.adapter.common.multiStreamTypeEventFlow
 import dev.eskt.arch.hex.adapter.common.singleStreamTypeEventFlow
