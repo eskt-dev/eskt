@@ -24,7 +24,7 @@ public class FileSystemEventStore internal constructor(
         storage.initStorage()
     }
 
-    override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
+    override fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<E, I>> {
         return storage.loadEventBatch(sincePosition, batchSize)
     }
 

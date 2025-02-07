@@ -30,7 +30,7 @@ public suspend inline fun EventStore.multiStreamTypeEventFlow(
 ): Flow<EventEnvelope<Any, Any>> = channelFlow {
     var lastPosition = sincePosition
     while (true) {
-        val eventBatch = loadEventBatch(lastPosition, batchSize)
+        val eventBatch = loadEventBatch<Any, Any>(lastPosition, batchSize)
         eventBatch.forEach {
             this.send(it)
             lastPosition = it.position

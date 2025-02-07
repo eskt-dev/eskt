@@ -10,7 +10,7 @@ public interface Storage {
 
     public fun <E, I, R> useStreamEvents(streamType: StreamType<E, I>, streamId: I, sinceVersion: Int, consume: (Sequence<EventEnvelope<E, I>>) -> R): R
 
-    public fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>>
+    public fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<E, I>>
 
     public fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<E, I>): List<EventEnvelope<E, I>>
 }

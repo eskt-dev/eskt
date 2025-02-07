@@ -29,7 +29,7 @@ public open class LoadEventTest<R : Storage, S : EventStore, F : StreamTestFacto
         // when
         val eventStore = factory.newEventStore(storage)
         (0..3L).forEach { sincePosition ->
-            val eventEnvelopes = eventStore.loadEventBatch(sincePosition)
+            val eventEnvelopes = eventStore.loadEventBatch<Any, Any>(sincePosition)
 
             // then
             assertEquals(3 - sincePosition.toInt(), eventEnvelopes.size)
