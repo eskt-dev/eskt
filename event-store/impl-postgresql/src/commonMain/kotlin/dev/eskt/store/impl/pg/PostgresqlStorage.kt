@@ -46,7 +46,7 @@ internal class PostgresqlStorage(
         }
     }
 
-    override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
+    override fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<E, I>> {
         val entries = databaseAdapter.getEntryBatch(
             sincePosition = sincePosition,
             batchSize = batchSize,

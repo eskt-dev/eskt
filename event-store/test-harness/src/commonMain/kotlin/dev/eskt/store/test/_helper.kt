@@ -9,9 +9,8 @@ internal fun <E, I> Storage.add(streamType: StreamType<E, I>, streamId: I, versi
     add(streamType, streamId, version - 1, listOf(event), metadata)
 }
 
-@Suppress("UNCHECKED_CAST")
 internal fun <E, I> Storage.getEventByPosition(position: Long): EventEnvelope<E, I> {
-    return loadEventBatch(position - 1, 1).single() as EventEnvelope<E, I>
+    return loadEventBatch<E, I>(position - 1, 1).single()
 }
 
 internal fun <E, I> Storage.getEventByStreamVersion(streamType: StreamType<E, I>, streamId: I, version: Int): EventEnvelope<E, I> {

@@ -55,11 +55,11 @@ internal class CopyOnWriteInMemoryStorage(
         }
     }
 
-    override fun loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<Any, Any>> {
+    override fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<E, I>> {
         return events.asSequence()
             .drop(sincePositionInt(sincePosition))
             .take(batchSize)
-            .toList()
+            .toList() as List<EventEnvelope<E, I>>
     }
 
     override fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int, streamType: StreamType<E, I>): List<EventEnvelope<E, I>> {
@@ -67,8 +67,7 @@ internal class CopyOnWriteInMemoryStorage(
             .drop(sincePositionInt(sincePosition))
             .filter { it.streamType == streamType }
             .take(batchSize)
-            .map { it as EventEnvelope<E, I> }
-            .toList()
+            .toList() as List<EventEnvelope<E, I>>
     }
 
     private fun <E, I> streamEvents(streamId: I) = (eventsByStreamId[streamId as Any] ?: emptyList()) as List<EventEnvelope<E, I>>
