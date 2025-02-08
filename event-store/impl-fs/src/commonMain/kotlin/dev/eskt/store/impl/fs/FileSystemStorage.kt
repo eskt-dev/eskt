@@ -81,7 +81,7 @@ public class FileSystemStorage internal constructor(
                     throw StorageVersionMismatchException((streamHandle.size() / STREAM_ENTRY_SIZE_IN_BYTES).toInt(), expectedVersion)
                 }
 
-                val dataAddresses = dataHandleRw.use { dataHandle ->
+                val dataAddresses = dataHandleRw.let { dataHandle ->
                     dataHandle.lock.withLock {
                         // calculate position based on previous wal entry
                         val dataAddressFirstAppend = dataHandle.size()
@@ -115,10 +115,8 @@ public class FileSystemStorage internal constructor(
                         newDataAddresses.forEach { walAddress ->
                             posBuffer.writeLong(walAddress)
                         }
-                        posHandleRw.use { posHandle ->
-                            posHandle.appendingSink().use { s ->
-                                s.write(posBuffer, posBuffer.size)
-                            }
+                        posHandleRw.appendingSink().use { s ->
+                            s.write(posBuffer, posBuffer.size)
                         }
 
                         newDataAddresses
