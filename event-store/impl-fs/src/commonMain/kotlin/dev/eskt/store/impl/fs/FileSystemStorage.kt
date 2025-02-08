@@ -46,6 +46,9 @@ public class FileSystemStorage internal constructor(
     private val dataPath = basePath / "dat"
     private val posPath = basePath / "pos"
 
+    private val dataHandleRw = fs.openReadWrite(dataPath)
+    private val posHandleRw = fs.openReadWrite(posPath)
+
     internal fun initStorage() {
         if (!fs.exists(dataPath) && !fs.exists(posPath)) {
             fs.sink(dataPath).buffer().use { }
@@ -78,7 +81,7 @@ public class FileSystemStorage internal constructor(
                     throw StorageVersionMismatchException((streamHandle.size() / STREAM_ENTRY_SIZE_IN_BYTES).toInt(), expectedVersion)
                 }
 
-                val dataAddresses = fs.openReadWrite(dataPath).use { dataHandle ->
+                val dataAddresses = dataHandleRw.use { dataHandle ->
                     dataHandle.lock.withLock {
                         // calculate position based on previous wal entry
                         val dataAddressFirstAppend = dataHandle.size()
@@ -112,7 +115,7 @@ public class FileSystemStorage internal constructor(
                         newDataAddresses.forEach { walAddress ->
                             posBuffer.writeLong(walAddress)
                         }
-                        fs.openReadWrite(posPath).use { posHandle ->
+                        posHandleRw.use { posHandle ->
                             posHandle.appendingSink().use { s ->
                                 s.write(posBuffer, posBuffer.size)
                             }
@@ -206,10 +209,10 @@ public class FileSystemStorage internal constructor(
     ): EventEnvelope<E, I> = source(addr).buffer().use { walBuffer ->
         val entrySize = walBuffer.readInt()
         val walEntryByteArray = walBuffer.readByteArray(entrySize.toLong())
-        val walEntry = walEntrySerializer.decodeFromByteArray(WalEntry.serializer(), walEntryByteArray)
         walBuffer.readInt() // ignore second copy of the entry size
         val position = walBuffer.readLong()
 
+        val walEntry = walEntrySerializer.decodeFromByteArray(WalEntry.serializer(), walEntryByteArray)
         val streamType = streamTypeFinder(walEntry.type)
 
         return EventEnvelope(
