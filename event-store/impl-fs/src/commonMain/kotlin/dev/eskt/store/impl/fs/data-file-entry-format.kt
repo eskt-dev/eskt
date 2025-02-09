@@ -5,6 +5,4 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
 
 @OptIn(ExperimentalSerializationApi::class)
-internal val dataFileEntryFormat: BinaryFormat = ProtoBuf {
-
-}
+internal val dataFileEntryFormat: BinaryFormat = ProtoBuf {}
