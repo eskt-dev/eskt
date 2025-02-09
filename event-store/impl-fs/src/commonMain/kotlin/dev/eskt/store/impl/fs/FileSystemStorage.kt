@@ -77,7 +77,7 @@ public class FileSystemStorage internal constructor(
                     throw StorageVersionMismatchException((streamHandle.size() / STREAM_ENTRY_SIZE_IN_BYTES).toInt(), expectedVersion)
                 }
 
-                val dataAddresses = buildList {
+                val dataAddresses = buildList<Long> {
                     // calculate position based on previous data entry
                     val dataAddressFirstAppend = dataHandleRw.size()
                     val positionFirstAppend = 1L + if (dataAddressFirstAppend > 0) {
