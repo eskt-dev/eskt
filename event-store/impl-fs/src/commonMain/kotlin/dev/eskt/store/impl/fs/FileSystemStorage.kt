@@ -7,9 +7,6 @@ import dev.eskt.store.api.StreamType
 import dev.eskt.store.storage.api.Storage
 import dev.eskt.store.storage.api.StorageVersionMismatchException
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.protobuf.ProtoBuf
-import kotlinx.serialization.protobuf.ProtoNumber
 import okio.Buffer
 import okio.FileHandle
 import okio.Path
@@ -38,7 +35,6 @@ public class FileSystemStorage internal constructor(
 
     public companion object {
         internal val fs = eventStoreFileSystem()
-        private val walEntrySerializer = ProtoBuf { }
         private const val STREAM_ENTRY_SIZE_IN_BYTES: Long = (Long.SIZE_BYTES).toLong()
         private const val POSITION_ENTRY_SIZE_IN_BYTES: Long = (Long.SIZE_BYTES).toLong()
     }
@@ -65,14 +61,14 @@ public class FileSystemStorage internal constructor(
         val metadataPayload = eventMetadataSerializer.serialize(metadata)
         val dataEntries = events.mapIndexed { index, event ->
             val eventPayload = streamType.binaryEventSerializer.serialize(event)
-            val walEntry = WalEntry(
+            val dataFileEntry = DataFileEntry(
                 type = streamType.id,
                 id = streamType.stringIdSerializer.serialize(streamId),
                 version = expectedVersion + index + 1,
                 eventPayload = eventPayload,
                 metadataPayload = metadataPayload,
             )
-            walEntrySerializer.encodeToByteArray(WalEntry.serializer(), walEntry)
+            dataFileEntryFormat.encodeToByteArray(DataFileEntry.serializer(), dataFileEntry)
         }
 
         fs.openReadWrite(streamPath).use { streamHandle ->
@@ -180,11 +176,17 @@ public class FileSystemStorage internal constructor(
         fs.openReadOnly(posPath).use { posHandle ->
             posHandle.source(sincePosition * POSITION_ENTRY_SIZE_IN_BYTES).buffer().use { posSource ->
                 fs.openReadOnly(dataPath).use { walHandle ->
+                    var read = 0
                     var added = 0
                     return buildList {
                         while (!posSource.exhausted()) {
                             val addr = posSource.readLong()
                             val envelope = walHandle.readEventEnvelopeAt<E, I>(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
+                            read++
+                            val expectedPosition = sincePosition + read
+                            if (expectedPosition != envelope.position) {
+                                throw IllegalStateException("Event store is corrupted, expected position $expectedPosition, but entry is ${envelope.position}")
+                            }
                             if (streamType == null || streamType == envelope.streamType) {
                                 add(envelope)
                                 added++
@@ -210,16 +212,16 @@ public class FileSystemStorage internal constructor(
         walBuffer.readInt() // ignore second copy of the entry size
         val position = walBuffer.readLong()
 
-        val walEntry = walEntrySerializer.decodeFromByteArray(WalEntry.serializer(), walEntryByteArray)
-        val streamType = streamTypeFinder(walEntry.type)
+        val dataFileEntry = dataFileEntryFormat.decodeFromByteArray(DataFileEntry.serializer(), walEntryByteArray)
+        val streamType = streamTypeFinder(dataFileEntry.type)
 
         return EventEnvelope(
             streamType,
-            streamType.stringIdSerializer.deserialize(walEntry.id),
-            walEntry.version,
+            streamType.stringIdSerializer.deserialize(dataFileEntry.id),
+            dataFileEntry.version,
             position,
-            eventMetadataSerializer.deserialize(walEntry.metadataPayload),
-            streamType.binaryEventSerializer.deserialize(walEntry.eventPayload),
+            eventMetadataSerializer.deserialize(dataFileEntry.metadataPayload),
+            streamType.binaryEventSerializer.deserialize(dataFileEntry.eventPayload),
         )
     }
 
@@ -239,18 +241,4 @@ public class FileSystemStorage internal constructor(
     @Suppress("UNCHECKED_CAST")
     private val <E, I> StreamType<E, I>.binaryEventSerializer: Serializer<E, ByteArray>
         get() = config.payloadSerializers[this] as Serializer<E, ByteArray>
-
-    @Serializable
-    private class WalEntry(
-        @ProtoNumber(1)
-        val type: String,
-        @ProtoNumber(2)
-        val id: String,
-        @ProtoNumber(3)
-        val version: Int,
-        @ProtoNumber(4)
-        val eventPayload: ByteArray,
-        @ProtoNumber(5)
-        val metadataPayload: ByteArray,
-    )
 }
