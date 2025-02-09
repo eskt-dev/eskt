@@ -176,12 +176,14 @@ public class FileSystemStorage internal constructor(
         fs.openReadOnly(posPath).use { posHandle ->
             posHandle.source(sincePosition * POSITION_ENTRY_SIZE_IN_BYTES).buffer().use { posSource ->
                 fs.openReadOnly(dataPath).use { walHandle ->
+                    var read = 0
                     var added = 0
                     return buildList {
                         while (!posSource.exhausted()) {
                             val addr = posSource.readLong()
                             val envelope = walHandle.readEventEnvelopeAt<E, I>(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
-                            val expectedPosition = sincePosition + 1 + added
+                            read++
+                            val expectedPosition = sincePosition + read
                             if (expectedPosition != envelope.position) {
                                 throw IllegalStateException("Event store is corrupted, expected position $expectedPosition, but entry is ${envelope.position}")
                             }
