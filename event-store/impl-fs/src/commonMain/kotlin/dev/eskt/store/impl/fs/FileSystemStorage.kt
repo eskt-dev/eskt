@@ -97,7 +97,8 @@ public class FileSystemStorage internal constructor(
                         dataBuffer.write(dataEntryBytes)
                         dataBuffer.writeInt(dataEntryBytes.size)
                         dataBuffer.writeLong(positionFirstAppend + index)
-                        add(last() + 4 + dataEntryBytes.size + 4 + 8)
+                        val nextAddress = last() + 4L + dataEntryBytes.size + 4L + 8L
+                        add(nextAddress)
                     }
                     removeLast() // an extra address is always added, so we remove it before returning the new addresses
 
