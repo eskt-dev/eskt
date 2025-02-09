@@ -78,7 +78,7 @@ public class FileSystemStorage internal constructor(
                 }
 
                 val dataAddresses = buildList {
-                    // calculate position based on previous wal entry
+                    // calculate position based on previous data entry
                     val dataAddressFirstAppend = dataHandleRw.size()
                     val positionFirstAppend = 1L + if (dataAddressFirstAppend > 0) {
                         dataHandleRw.source(dataAddressFirstAppend - Long.SIZE_BYTES).use { s ->
