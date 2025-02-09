@@ -62,7 +62,7 @@ internal class FileSystemLoadStreamTest : LoadStreamTest<FileSystemStorage, File
 
         // when, then
         val eventStore = factory.newEventStore(storage)
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<CorruptedDataException> {
             eventStore.loadEventBatch<Any, Any>(0L, 2)
         }
     }

@@ -148,9 +148,16 @@ public class FileSystemStorage internal constructor(
                 fs.openReadOnly(dataPath).use { walHandle ->
                     return consume(
                         sequence {
+                            var read = 0
                             while (!streamSource.exhausted()) {
                                 val addr = streamSource.readLong()
-                                val envelope = walHandle.readEventEnvelopeAt<E, I>(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
+                                read++
+                                val envelope = try {
+                                    walHandle.readEventEnvelopeAt<E, I>(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
+                                } catch (e: okio.IOException) {
+                                    val message = "Error reading data file at address $addr, pointer from stream $streamId version ${sinceVersion + read}."
+                                    throw CorruptedDataException(message, e)
+                                }
                                 yield(envelope)
                             }
                         },
@@ -181,11 +188,15 @@ public class FileSystemStorage internal constructor(
                     return buildList {
                         while (!posSource.exhausted()) {
                             val addr = posSource.readLong()
-                            val envelope = walHandle.readEventEnvelopeAt<E, I>(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
                             read++
                             val expectedPosition = sincePosition + read
+                            val envelope = try {
+                                walHandle.readEventEnvelopeAt<E, I>(addr, streamTypeFinder = { id -> registeredTypes[id].asTyped() })
+                            } catch (e: okio.IOException) {
+                                throw CorruptedDataException("Error reading data file at address $addr, pointer from position $expectedPosition.", e)
+                            }
                             if (expectedPosition != envelope.position) {
-                                throw IllegalStateException("Event store is corrupted, expected position $expectedPosition, but entry is ${envelope.position}")
+                                throw CorruptedDataException("Event store is corrupted, expected position $expectedPosition, but entry is ${envelope.position}")
                             }
                             if (streamType == null || streamType == envelope.streamType) {
                                 add(envelope)
@@ -209,7 +220,7 @@ public class FileSystemStorage internal constructor(
     ): EventEnvelope<E, I> = source(addr).buffer().use { walBuffer ->
         val entrySize = walBuffer.readInt()
         val walEntryByteArray = walBuffer.readByteArray(entrySize.toLong())
-        walBuffer.readInt() // ignore second copy of the entry size
+        walBuffer.skip(4) // ignore second copy of the entry size
         val position = walBuffer.readLong()
 
         val dataFileEntry = dataFileEntryFormat.decodeFromByteArray(DataFileEntry.serializer(), walEntryByteArray)
