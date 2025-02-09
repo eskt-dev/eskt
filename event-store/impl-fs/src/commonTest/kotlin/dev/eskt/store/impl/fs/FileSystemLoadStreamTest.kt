@@ -16,7 +16,7 @@ internal class FileSystemLoadStreamTest : LoadStreamTest<FileSystemStorage, File
     FileSystemStreamTestFactory(),
 ) {
     @Test
-    @JsName("child-test1")
+    @JsName("child_test1")
     fun `given corrupted event 2 - when loading 2 events - then fails`() {
         // given
         val storage = factory.newStorage()
