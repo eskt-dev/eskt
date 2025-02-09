@@ -71,53 +71,50 @@ public class FileSystemStorage internal constructor(
             dataFileEntryFormat.encodeToByteArray(DataFileEntry.serializer(), dataFileEntry)
         }
 
-        fs.openReadWrite(streamPath).use { streamHandle ->
-            streamHandle.lock.withLock {
+        dataHandleRw.lock.withLock {
+            fs.openReadWrite(streamPath).use { streamHandle ->
                 if (streamHandle.size() != expectedVersion * STREAM_ENTRY_SIZE_IN_BYTES) {
                     throw StorageVersionMismatchException((streamHandle.size() / STREAM_ENTRY_SIZE_IN_BYTES).toInt(), expectedVersion)
                 }
 
-                val dataAddresses = dataHandleRw.let { dataHandle ->
-                    dataHandle.lock.withLock {
-                        // calculate position based on previous wal entry
-                        val dataAddressFirstAppend = dataHandle.size()
-                        val positionFirstAppend = 1L + if (dataAddressFirstAppend > 0) {
-                            dataHandle.source(dataAddressFirstAppend - Long.SIZE_BYTES).use { s ->
-                                s.buffer().use { it.readLong() }
-                            }
-                        } else {
-                            0L
+                val dataAddresses = buildList {
+                    // calculate position based on previous wal entry
+                    val dataAddressFirstAppend = dataHandleRw.size()
+                    val positionFirstAppend = 1L + if (dataAddressFirstAppend > 0) {
+                        dataHandleRw.source(dataAddressFirstAppend - Long.SIZE_BYTES).use { s ->
+                            s.buffer().use { it.readLong() }
                         }
+                    } else {
+                        0L
+                    }
 
-                        val newDataAddresses = mutableListOf(dataAddressFirstAppend)
+                    add(dataAddressFirstAppend)
 
-                        // write wal entry buffer
-                        val walBuffer = Buffer()
-                        dataEntries.forEachIndexed { index, walEntryBytes ->
-                            walBuffer.writeInt(walEntryBytes.size)
-                            walBuffer.write(walEntryBytes)
-                            walBuffer.writeInt(walEntryBytes.size)
-                            walBuffer.writeLong(positionFirstAppend + index)
-                            newDataAddresses.add(newDataAddresses.last() + 4 + walEntryBytes.size + 4 + 8)
-                        }
-                        newDataAddresses.removeLast() // an extra address is always added
+                    // write data entry buffer
+                    val dataBuffer = Buffer()
+                    dataEntries.forEachIndexed { index, dataEntryBytes ->
+                        dataBuffer.writeInt(dataEntryBytes.size)
+                        dataBuffer.write(dataEntryBytes)
+                        dataBuffer.writeInt(dataEntryBytes.size)
+                        dataBuffer.writeLong(positionFirstAppend + index)
+                        add(last() + 4 + dataEntryBytes.size + 4 + 8)
+                    }
+                    removeLast() // an extra address is always added, so we remove it before returning the new addresses
 
-                        dataHandle.appendingSink().use { s ->
-                            s.write(walBuffer, walBuffer.size)
-                        }
-
-                        // write position index buffer
-                        val posBuffer = Buffer()
-                        newDataAddresses.forEach { walAddress ->
-                            posBuffer.writeLong(walAddress)
-                        }
-                        posHandleRw.appendingSink().use { s ->
-                            s.write(posBuffer, posBuffer.size)
-                        }
-
-                        newDataAddresses
+                    dataHandleRw.appendingSink().use { s ->
+                        s.write(dataBuffer, dataBuffer.size)
                     }
                 }
+
+                // write position index buffer
+                val posBuffer = Buffer()
+                dataAddresses.forEach { dataAddress ->
+                    posBuffer.writeLong(dataAddress)
+                }
+                posHandleRw.appendingSink().use { s ->
+                    s.write(posBuffer, posBuffer.size)
+                }
+
                 // write stream index
                 val streamBuffer = Buffer()
                 dataAddresses.forEach { walAddress ->
