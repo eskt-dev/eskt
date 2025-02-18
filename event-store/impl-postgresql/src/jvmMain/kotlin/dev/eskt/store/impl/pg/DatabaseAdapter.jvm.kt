@@ -1,6 +1,5 @@
 package dev.eskt.store.impl.pg
 
-import dev.eskt.store.impl.pg.PostgresqlStorage.DatabaseEntry
 import dev.eskt.store.storage.api.StorageVersionMismatchException
 import org.postgresql.util.PSQLState
 import java.sql.ResultSet
@@ -12,7 +11,7 @@ internal actual class DatabaseAdapter actual constructor(
     actual fun getEntryByPosition(
         position: Long,
         tableInfo: TableInfo,
-    ): PostgresqlStorage.DatabaseEntry {
+    ): DatabaseEntry {
         dataSource.connection.use { connection ->
             connection.prepareStatement(selectEventByPositionSql(tableInfo))
                 .use { ps ->
@@ -29,7 +28,7 @@ internal actual class DatabaseAdapter actual constructor(
         sincePosition: Long,
         batchSize: Int,
         tableInfo: TableInfo,
-    ): List<PostgresqlStorage.DatabaseEntry> {
+    ): List<DatabaseEntry> {
         dataSource.connection.use { connection ->
             connection.prepareStatement(selectEventSincePositionSql(tableInfo))
                 .use { ps ->
@@ -51,7 +50,7 @@ internal actual class DatabaseAdapter actual constructor(
         batchSize: Int,
         type: String,
         tableInfo: TableInfo,
-    ): List<PostgresqlStorage.DatabaseEntry> {
+    ): List<DatabaseEntry> {
         dataSource.connection.use { connection ->
             connection.prepareStatement(selectEventByTypeSincePositionSql(tableInfo))
                 .use { ps ->
@@ -95,8 +94,8 @@ internal actual class DatabaseAdapter actual constructor(
         }
     }
 
-    private fun ResultSet.databaseEntry(): PostgresqlStorage.DatabaseEntry {
-        return PostgresqlStorage.DatabaseEntry(
+    private fun ResultSet.databaseEntry(): DatabaseEntry {
+        return DatabaseEntry(
             position = getLong("position"),
             type = getString("stream_type"),
             id = getString("stream_id"),
@@ -106,7 +105,7 @@ internal actual class DatabaseAdapter actual constructor(
         )
     }
 
-    actual fun persistEntries(streamId: String, expectedVersion: Int, entries: List<PostgresqlStorage.DatabaseEntry>, tableInfo: TableInfo) {
+    actual fun persistEntries(streamId: String, expectedVersion: Int, entries: List<DatabaseEntry>, tableInfo: TableInfo) {
         dataSource.connection.use { connection ->
             connection.prepareStatement(selectMaxVersionByStreamIdSql(tableInfo)).use { ps ->
                 ps.setObject(1, streamId, java.sql.Types.OTHER)
