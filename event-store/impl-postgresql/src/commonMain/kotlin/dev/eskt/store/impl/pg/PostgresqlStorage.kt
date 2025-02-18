@@ -84,5 +84,4 @@ internal class PostgresqlStorage(
     @Suppress("UNCHECKED_CAST")
     private val <E, I> StreamType<E, I>.stringEventSerializer: Serializer<E, String>
         get() = config.payloadSerializers[this] as Serializer<E, String>
-
 }
