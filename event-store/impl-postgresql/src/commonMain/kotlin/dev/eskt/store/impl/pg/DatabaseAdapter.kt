@@ -1,7 +1,5 @@
 package dev.eskt.store.impl.pg
 
-import dev.eskt.store.impl.pg.PostgresqlStorage.DatabaseEntry
-
 internal expect class DatabaseAdapter(dataSource: DataSource) {
     fun getEntryByPosition(
         position: Long,
