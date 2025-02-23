@@ -13,12 +13,12 @@ import kotlinx.serialization.serializer
 import java.util.UUID
 import kotlin.reflect.KClass
 
-internal class PostgresqlConfig(
+internal class PostgresqlConfig<DS>(
     val registeredTypes: List<StreamType<*, *>>,
     internal val payloadSerializers: Map<StreamType<*, *>, Serializer<*, String>>,
     internal val idSerializers: Map<StreamType<*, *>, Serializer<*, String>>,
     internal val eventMetadataSerializer: Serializer<EventMetadata, String>,
-    val dataSource: DataSource,
+    val dataSource: DS,
     val eventTable: String,
     val eventWriteTable: String = eventTable,
 ) {
@@ -51,8 +51,8 @@ internal data class TableInfo(
     val writeTable: String,
 )
 
-public class PostgresqlConfigBuilder(
-    private val datasource: DataSource,
+public class PostgresqlConfigBuilder<DS>(
+    private val datasource: DS,
     private val eventTable: String,
     /**
      * In case you need your event table to be a view, you can define a different table name that will be used for write operations only.
@@ -120,7 +120,7 @@ public class PostgresqlConfigBuilder(
         }
     }
 
-    internal fun build(): PostgresqlConfig = PostgresqlConfig(
+    internal fun build(): PostgresqlConfig<DS> = PostgresqlConfig(
         registeredTypes = registeredTypes,
         payloadSerializers = payloadSerializers,
         idSerializers = idSerializers,

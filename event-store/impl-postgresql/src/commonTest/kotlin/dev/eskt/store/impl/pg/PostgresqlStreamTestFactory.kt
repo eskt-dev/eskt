@@ -6,7 +6,7 @@ import dev.eskt.store.test.w.car.CarStreamType
 import dev.eskt.store.test.w.driver.DriverStreamType
 
 @OptIn(ExperimentalStdlibApi::class)
-internal class PostgresqlStreamTestFactory : StreamTestFactory<PostgresqlStorage, PostgresqlEventStore>() {
+internal class PostgresqlStreamTestFactory : StreamTestFactory<PostgresqlJdbcStorage, PostgresqlJdbcEventStore>() {
     internal val connectionConfig = generateTestConnectionConfig()
 
     private val config
@@ -28,11 +28,11 @@ internal class PostgresqlStreamTestFactory : StreamTestFactory<PostgresqlStorage
             eventTable = "event",
         )
 
-    override fun createStorage(): PostgresqlStorage {
-        return PostgresqlStorage(config)
+    override fun createStorage(): PostgresqlJdbcStorage {
+        return PostgresqlJdbcStorage(config)
     }
 
-    override fun createEventStore(storage: PostgresqlStorage): PostgresqlEventStore {
-        return PostgresqlEventStore(config, storage)
+    override fun createEventStore(storage: PostgresqlJdbcStorage): PostgresqlJdbcEventStore {
+        return PostgresqlJdbcEventStore(config, storage)
     }
 }

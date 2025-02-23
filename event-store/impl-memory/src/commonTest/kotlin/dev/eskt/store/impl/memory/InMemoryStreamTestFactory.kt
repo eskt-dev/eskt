@@ -1,6 +1,6 @@
 package dev.eskt.store.impl.memory
 
-import dev.eskt.store.storage.api.Storage
+import dev.eskt.store.storage.api.blocking.Storage
 import dev.eskt.store.test.StreamTestFactory
 import dev.eskt.store.test.w.car.CarStreamType
 import dev.eskt.store.test.w.driver.DriverStreamType

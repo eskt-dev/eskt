@@ -7,7 +7,7 @@ import javax.sql.DataSource
 
 internal class JdbcDatabaseAdapter(
     private val dataSource: DataSource,
-) : DatabaseAdapter {
+) : dev.eskt.store.impl.pg.blocking.DatabaseAdapter {
     override fun getEntryByPosition(
         position: Long,
         tableInfo: TableInfo,

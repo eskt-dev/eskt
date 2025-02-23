@@ -1,4 +1,7 @@
-package dev.eskt.store.impl.pg
+package dev.eskt.store.impl.pg.blocking
+
+import dev.eskt.store.impl.pg.DatabaseEntry
+import dev.eskt.store.impl.pg.TableInfo
 
 internal interface DatabaseAdapter {
     fun getEntryByPosition(
