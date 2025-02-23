@@ -1,7 +1,7 @@
 package dev.eskt.store.test
 
 import dev.eskt.store.api.EventStore
-import dev.eskt.store.storage.api.Storage
+import dev.eskt.store.storage.api.blocking.Storage
 
 @OptIn(ExperimentalStdlibApi::class)
 public abstract class StreamTestFactory<R : Storage, S : EventStore> {

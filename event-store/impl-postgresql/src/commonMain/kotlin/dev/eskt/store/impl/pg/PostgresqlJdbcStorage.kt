@@ -4,10 +4,10 @@ import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
-import dev.eskt.store.storage.api.Storage
+import dev.eskt.store.storage.api.blocking.Storage
 
-internal class PostgresqlStorage(
-    internal val config: PostgresqlConfig,
+internal class PostgresqlJdbcStorage(
+    internal val config: PostgresqlConfig<DataSource>,
 ) : Storage {
     private val registeredTypes = config.registeredTypes.associateBy { it.id }
     private val eventMetadataSerializer = config.eventMetadataSerializer

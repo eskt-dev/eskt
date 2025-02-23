@@ -2,9 +2,10 @@ package dev.eskt.store.impl.fs
 
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata
-import dev.eskt.store.api.EventStore
 import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
+import dev.eskt.store.api.blocking.EventStore
+import dev.eskt.store.impl.common.base.blocking.StreamTypeHandler
 
 public class FileSystemEventStore internal constructor(
     private val config: FileSystemConfig,
@@ -32,8 +33,8 @@ public class FileSystemEventStore internal constructor(
         return storage.loadEventBatch(sincePosition, batchSize, streamType)
     }
 
-    override fun <E, I> withStreamType(type: StreamType<E, I>): dev.eskt.store.api.StreamTypeHandler<E, I> {
-        return dev.eskt.store.impl.common.base.StreamTypeHandler(type, storage)
+    override fun <E, I> withStreamType(type: StreamType<E, I>): StreamTypeHandler<E, I> {
+        return StreamTypeHandler(type, storage)
     }
 
     @Suppress("UNCHECKED_CAST")

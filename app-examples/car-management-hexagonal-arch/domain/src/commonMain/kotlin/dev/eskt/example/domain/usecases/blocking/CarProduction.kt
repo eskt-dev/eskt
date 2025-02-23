@@ -1,17 +1,19 @@
-package dev.eskt.example.domain
+package dev.eskt.example.domain.usecases.blocking
 
 import com.benasher44.uuid.Uuid
+import dev.eskt.example.domain.UnitOfWork
+import dev.eskt.example.domain.UseCase
 import dev.eskt.example.domain.command.Car
 import dev.eskt.example.domain.command.CarCommand
-import dev.eskt.example.domain.command.CarWriteHelperRepository
+import dev.eskt.example.domain.command.CarWriteHelperBlockingRepository
 import dev.eskt.example.domain.command.handle
-import dev.eskt.store.api.EventStore
+import dev.eskt.store.api.blocking.EventStore
 import dev.eskt.store.test.w.car.CarEvent
 import dev.eskt.store.test.w.car.CarStreamType
 
 @UseCase
 class CarProduction(
-    private val carWriteHelperRepository: CarWriteHelperRepository,
+    private val carWriteHelperRepository: CarWriteHelperBlockingRepository,
     private val eventStore: EventStore,
     private val unitOfWork: UnitOfWork,
 ) {

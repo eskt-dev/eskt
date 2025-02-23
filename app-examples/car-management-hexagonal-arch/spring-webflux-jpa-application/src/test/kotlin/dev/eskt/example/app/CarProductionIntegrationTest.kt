@@ -1,10 +1,10 @@
 package dev.eskt.example.app
 
 import com.benasher44.uuid.uuid4
-import dev.eskt.example.domain.CarProduction
+import dev.eskt.example.domain.usecases.blocking.CarProduction
 import dev.eskt.example.domain.command.CarCommand
-import dev.eskt.example.domain.command.CarWriteHelperRepository
-import dev.eskt.store.api.EventStore
+import dev.eskt.example.domain.command.CarWriteHelperBlockingRepository
+import dev.eskt.store.api.blocking.EventStore
 import dev.eskt.store.test.w.car.CarProducedEvent
 import dev.eskt.store.test.w.car.CarStreamType
 import org.flywaydb.core.Flyway
@@ -21,7 +21,7 @@ internal class CarProductionIntegrationTest(
     @Autowired
     val flyway: Flyway,
     @Autowired
-    val carWriteHelperRepository: CarWriteHelperRepository,
+    val carWriteHelperRepository: CarWriteHelperBlockingRepository,
     @Autowired
     val eventStore: EventStore,
     @Autowired

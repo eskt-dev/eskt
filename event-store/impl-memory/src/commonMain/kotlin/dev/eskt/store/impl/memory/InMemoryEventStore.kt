@@ -1,10 +1,10 @@
 package dev.eskt.store.impl.memory
 
 import dev.eskt.store.api.EventEnvelope
-import dev.eskt.store.api.EventStore
 import dev.eskt.store.api.StreamType
-import dev.eskt.store.api.StreamTypeHandler
-import dev.eskt.store.storage.api.Storage
+import dev.eskt.store.api.blocking.EventStore
+import dev.eskt.store.api.blocking.StreamTypeHandler
+import dev.eskt.store.storage.api.blocking.Storage
 
 public class InMemoryEventStore internal constructor(
     private val config: InMemoryConfig,
@@ -35,6 +35,6 @@ public class InMemoryEventStore internal constructor(
     }
 
     override fun <E, I> withStreamType(type: StreamType<E, I>): StreamTypeHandler<E, I> {
-        return dev.eskt.store.impl.common.base.StreamTypeHandler(type, storage)
+        return dev.eskt.store.impl.common.base.blocking.StreamTypeHandler(type, storage)
     }
 }

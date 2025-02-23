@@ -1,4 +1,4 @@
-package dev.eskt.example.app
+package dev.eskt.example.app.command
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Id

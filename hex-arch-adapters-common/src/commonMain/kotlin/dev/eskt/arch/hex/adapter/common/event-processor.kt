@@ -1,13 +1,13 @@
 package dev.eskt.arch.hex.adapter.common
 
 import dev.eskt.store.api.EventEnvelope
-import dev.eskt.store.api.EventStore
 import dev.eskt.store.api.StreamType
+import dev.eskt.store.api.blocking.EventStore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 
-public suspend inline fun <E, I> EventStore.singleStreamTypeEventFlow(
+public fun <E, I> EventStore.singleStreamTypeEventFlow(
     streamType: StreamType<E, I>,
     sincePosition: Long,
     batchSize: Int,
@@ -24,7 +24,7 @@ public suspend inline fun <E, I> EventStore.singleStreamTypeEventFlow(
     }
 }
 
-public suspend inline fun EventStore.multiStreamTypeEventFlow(
+public fun EventStore.multiStreamTypeEventFlow(
     sincePosition: Long,
     batchSize: Int,
 ): Flow<EventEnvelope<Any, Any>> = channelFlow {

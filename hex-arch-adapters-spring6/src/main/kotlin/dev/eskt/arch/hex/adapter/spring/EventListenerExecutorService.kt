@@ -7,7 +7,7 @@ import dev.eskt.arch.hex.adapter.common.singleStreamTypeEventFlow
 import dev.eskt.arch.hex.port.Bookmark
 import dev.eskt.arch.hex.port.MultiStreamTypeEventListener
 import dev.eskt.arch.hex.port.SingleStreamTypeEventListener
-import dev.eskt.store.api.EventStore
+import dev.eskt.store.api.blocking.EventStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi

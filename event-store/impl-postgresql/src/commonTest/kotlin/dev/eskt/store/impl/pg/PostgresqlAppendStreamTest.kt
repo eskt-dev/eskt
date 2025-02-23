@@ -4,7 +4,7 @@ import dev.eskt.store.test.AppendStreamTest
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 
-internal class PostgresqlAppendStreamTest : AppendStreamTest<PostgresqlStorage, PostgresqlEventStore, PostgresqlStreamTestFactory>(
+internal class PostgresqlAppendStreamTest : AppendStreamTest<PostgresqlJdbcStorage, PostgresqlJdbcEventStore, PostgresqlStreamTestFactory>(
     PostgresqlStreamTestFactory(),
 ) {
     @BeforeTest

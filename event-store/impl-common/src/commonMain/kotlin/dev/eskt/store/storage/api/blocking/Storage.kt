@@ -1,8 +1,9 @@
-package dev.eskt.store.storage.api
+package dev.eskt.store.storage.api.blocking
 
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.StreamType
+import dev.eskt.store.storage.api.StorageVersionMismatchException
 
 public interface Storage {
     @Throws(StorageVersionMismatchException::class)

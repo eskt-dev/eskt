@@ -9,7 +9,7 @@ import org.springframework.context.annotation.FilterType
 @Configuration
 @ComponentScan(
     basePackages = [
-        "dev.eskt.example.domain",
+        "dev.eskt.example.domain.usecases.blocking",
     ],
     includeFilters = [
         ComponentScan.Filter(

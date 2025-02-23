@@ -2,26 +2,15 @@ package dev.eskt.store.impl.pg
 
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata
-import dev.eskt.store.api.EventStore
 import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
-import dev.eskt.store.api.StreamTypeHandler
+import dev.eskt.store.api.blocking.EventStore
+import dev.eskt.store.api.blocking.StreamTypeHandler
 
-public class PostgresqlEventStore internal constructor(
-    private val config: PostgresqlConfig,
-    private val storage: PostgresqlStorage = PostgresqlStorage(config),
+public class PostgresqlJdbcEventStore internal constructor(
+    private val config: PostgresqlConfig<DataSource>,
+    private val storage: PostgresqlJdbcStorage = PostgresqlJdbcStorage(config),
 ) : EventStore {
-    public constructor(
-        dataSource: DataSource,
-        eventTable: String,
-        eventWriteTable: String = eventTable,
-        block: PostgresqlConfigBuilder.() -> Unit,
-    ) : this(
-        PostgresqlConfigBuilder(dataSource, eventTable, eventWriteTable)
-            .apply(block)
-            .build(),
-    )
-
     override val registeredTypes: Set<StreamType<*, *>> = config.registeredTypes.toSet()
 
     override fun <E, I> loadEventBatch(sincePosition: Long, batchSize: Int): List<EventEnvelope<E, I>> {
@@ -33,7 +22,7 @@ public class PostgresqlEventStore internal constructor(
     }
 
     override fun <E, I> withStreamType(type: StreamType<E, I>): StreamTypeHandler<E, I> {
-        return dev.eskt.store.impl.common.base.StreamTypeHandler(type, storage)
+        return dev.eskt.store.impl.common.base.blocking.StreamTypeHandler(type, storage)
     }
 
     public val dataSource: DataSource
