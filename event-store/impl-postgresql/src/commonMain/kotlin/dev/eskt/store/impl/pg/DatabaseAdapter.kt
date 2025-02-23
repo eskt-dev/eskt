@@ -1,6 +1,6 @@
 package dev.eskt.store.impl.pg
 
-internal expect class DatabaseAdapter(dataSource: DataSource) {
+internal interface DatabaseAdapter {
     fun getEntryByPosition(
         position: Long,
         tableInfo: TableInfo,
@@ -9,13 +9,7 @@ internal expect class DatabaseAdapter(dataSource: DataSource) {
     fun getEntryBatch(
         sincePosition: Long,
         batchSize: Int,
-        tableInfo: TableInfo,
-    ): List<DatabaseEntry>
-
-    fun getEntryBatch(
-        sincePosition: Long,
-        batchSize: Int,
-        type: String,
+        type: String?,
         tableInfo: TableInfo,
     ): List<DatabaseEntry>
 

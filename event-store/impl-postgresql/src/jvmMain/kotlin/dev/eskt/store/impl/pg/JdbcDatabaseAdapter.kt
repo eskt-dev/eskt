@@ -5,10 +5,10 @@ import org.postgresql.util.PSQLState
 import java.sql.ResultSet
 import javax.sql.DataSource
 
-internal actual class DatabaseAdapter actual constructor(
+internal class JdbcDatabaseAdapter(
     private val dataSource: DataSource,
-) {
-    actual fun getEntryByPosition(
+) : DatabaseAdapter {
+    override fun getEntryByPosition(
         position: Long,
         tableInfo: TableInfo,
     ): DatabaseEntry {
@@ -24,14 +24,15 @@ internal actual class DatabaseAdapter actual constructor(
         }
     }
 
-    actual fun getEntryBatch(
+    override fun getEntryBatch(
         sincePosition: Long,
         batchSize: Int,
+        type: String?,
         tableInfo: TableInfo,
     ): List<DatabaseEntry> {
         dataSource.connection.use { connection ->
-            connection.prepareStatement(selectEventSincePositionSql(tableInfo))
-                .use { ps ->
+            when (type) {
+                null -> connection.prepareStatement(selectEventSincePositionSql(tableInfo)).use { ps ->
                     ps.setLong(1, sincePosition)
                     ps.setInt(2, batchSize)
                     ps.executeQuery().use { rs ->
@@ -42,18 +43,8 @@ internal actual class DatabaseAdapter actual constructor(
                         }
                     }
                 }
-        }
-    }
 
-    actual fun getEntryBatch(
-        sincePosition: Long,
-        batchSize: Int,
-        type: String,
-        tableInfo: TableInfo,
-    ): List<DatabaseEntry> {
-        dataSource.connection.use { connection ->
-            connection.prepareStatement(selectEventByTypeSincePositionSql(tableInfo))
-                .use { ps ->
+                else -> connection.prepareStatement(selectEventByTypeSincePositionSql(tableInfo)).use { ps ->
                     ps.setObject(1, type, java.sql.Types.OTHER)
                     ps.setLong(2, sincePosition)
                     ps.setInt(3, batchSize)
@@ -65,10 +56,11 @@ internal actual class DatabaseAdapter actual constructor(
                         }
                     }
                 }
+            }
         }
     }
 
-    actual fun <R> useEntriesByStreamIdAndVersion(
+    override fun <R> useEntriesByStreamIdAndVersion(
         streamId: String,
         sinceVersion: Int,
         limit: Int,
@@ -105,7 +97,7 @@ internal actual class DatabaseAdapter actual constructor(
         )
     }
 
-    actual fun persistEntries(streamId: String, expectedVersion: Int, entries: List<DatabaseEntry>, tableInfo: TableInfo) {
+    override fun persistEntries(streamId: String, expectedVersion: Int, entries: List<DatabaseEntry>, tableInfo: TableInfo) {
         dataSource.connection.use { connection ->
             connection.prepareStatement(selectMaxVersionByStreamIdSql(tableInfo)).use { ps ->
                 ps.setObject(1, streamId, java.sql.Types.OTHER)
