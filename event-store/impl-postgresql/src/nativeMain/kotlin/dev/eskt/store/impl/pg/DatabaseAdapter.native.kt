@@ -1,26 +1,45 @@
 package dev.eskt.store.impl.pg
 
-internal actual class DatabaseAdapter actual constructor(dataSource: DataSource) {
-    actual fun getEntryByPosition(
+internal class NativeDatabaseAdapter : DatabaseAdapter {
+    override fun getEntryByPosition(
         position: Long,
         tableInfo: TableInfo,
-    ): PostgresqlStorage.DatabaseEntry {
+    ): DatabaseEntry {
         TODO("Not yet implemented")
     }
 
-    actual fun getEntriesByStreamIdAndVersion(
+    override fun getEntryBatch(
+        sincePosition: Long,
+        batchSize: Int,
+        tableInfo: TableInfo,
+    ): List<DatabaseEntry> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getEntryBatch(
+        sincePosition: Long,
+        batchSize: Int,
+        type: String,
+        tableInfo: TableInfo,
+    ): List<DatabaseEntry> {
+        TODO("Not yet implemented")
+    }
+
+    override fun <R> useEntriesByStreamIdAndVersion(
         streamId: String,
         sinceVersion: Int,
         limit: Int,
         tableInfo: TableInfo,
-    ): List<PostgresqlStorage.DatabaseEntry> {
+        consume: (Sequence<DatabaseEntry>) -> R,
+    ): R {
         TODO("Not yet implemented")
     }
 
-    actual fun persistEntries(
-        entries: List<PostgresqlStorage.DatabaseEntry>,
-        tableInfo: TableInfo,
-    ) {
+    private fun ResultSet.databaseEntry(): DatabaseEntry {
+        TODO("Not yet implemented")
+    }
+
+    override fun persistEntries(streamId: String, expectedVersion: Int, entries: List<DatabaseEntry>, tableInfo: TableInfo) {
         TODO("Not yet implemented")
     }
 }

@@ -12,7 +12,7 @@ internal class PostgresqlStorage(
     private val registeredTypes = config.registeredTypes.associateBy { it.id }
     private val eventMetadataSerializer = config.eventMetadataSerializer
 
-    private val databaseAdapter = DatabaseAdapter(config.dataSource)
+    private val databaseAdapter = config.dataSource.createAdapter()
 
     override fun <E, I> add(streamType: StreamType<E, I>, streamId: I, expectedVersion: Int, events: List<E>, metadata: EventMetadata) {
         if (streamType.id !in registeredTypes) throw IllegalStateException("Unregistered type: $streamType")
@@ -50,6 +50,7 @@ internal class PostgresqlStorage(
         val entries = databaseAdapter.getEntryBatch(
             sincePosition = sincePosition,
             batchSize = batchSize,
+            type = null,
             tableInfo = config.tableInfo,
         )
         return entries.map { entry -> entry.toEventEnvelope() }
