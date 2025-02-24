@@ -16,6 +16,7 @@ kotlin {
                 implementation(libs.okio.core)
                 implementation(libs.kotlinx.serialization.cbor) // used for default metadata serializer only
                 implementation(libs.kotlinx.serialization.protobuf)
+                implementation(libs.kotlinx.atomicfu)
             }
         }
         commonTest {
