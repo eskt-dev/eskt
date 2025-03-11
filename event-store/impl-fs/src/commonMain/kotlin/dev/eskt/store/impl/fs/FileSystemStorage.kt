@@ -6,14 +6,14 @@ import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
 import dev.eskt.store.storage.api.StorageVersionMismatchException
 import dev.eskt.store.storage.api.blocking.Storage
+import kotlinx.atomicfu.locks.reentrantLock
+import kotlinx.atomicfu.locks.withLock
 import kotlinx.serialization.ExperimentalSerializationApi
-import okio.Buffer
 import okio.FileHandle
 import okio.Path
 import okio.Path.Companion.toPath
 import okio.buffer
 import okio.use
-import okio.withLock
 
 @OptIn(ExperimentalSerializationApi::class)
 public class FileSystemStorage internal constructor(
@@ -42,8 +42,7 @@ public class FileSystemStorage internal constructor(
     private val dataPath = basePath / "dat"
     private val posPath = basePath / "pos"
 
-    private val dataHandleRw = fs.openReadWrite(dataPath)
-    private val posHandleRw = fs.openReadWrite(posPath)
+    private val writeLock = reentrantLock()
 
     internal fun initStorage() {
         if (!fs.exists(dataPath) && !fs.exists(posPath)) {
@@ -71,13 +70,13 @@ public class FileSystemStorage internal constructor(
             dataFileEntryFormat.encodeToByteArray(DataFileEntry.serializer(), dataFileEntry)
         }
 
-        dataHandleRw.lock.withLock {
-            fs.openReadWrite(streamPath).use { streamHandle ->
-                if (streamHandle.size() != expectedVersion * STREAM_ENTRY_SIZE_IN_BYTES) {
-                    throw StorageVersionMismatchException((streamHandle.size() / STREAM_ENTRY_SIZE_IN_BYTES).toInt(), expectedVersion)
+        writeLock.withLock {
+            useHandles(fs.openReadWrite(dataPath), fs.openReadWrite(posPath), fs.openReadWrite(streamPath)) { dataHandleRw, posHandleRw, streamHandleRw ->
+                if (streamHandleRw.size() != expectedVersion * STREAM_ENTRY_SIZE_IN_BYTES) {
+                    throw StorageVersionMismatchException((streamHandleRw.size() / STREAM_ENTRY_SIZE_IN_BYTES).toInt(), expectedVersion)
                 }
 
-                val dataAddresses = buildList<Long> {
+                val dataAddresses = dataHandleRw.appendingSink().buffer().use { dataBuffer ->
                     // calculate position based on previous data entry
                     val dataAddressFirstAppend = dataHandleRw.size()
                     val positionFirstAppend = 1L + if (dataAddressFirstAppend > 0) {
@@ -88,44 +87,100 @@ public class FileSystemStorage internal constructor(
                         0L
                     }
 
-                    add(dataAddressFirstAppend)
+                    var appended = 0L
+                    dataEntries.mapIndexed { index, dataEntryBytes ->
+                        val addr = dataAddressFirstAppend + appended // address we are about to write right now
 
-                    // write data entry buffer
-                    val dataBuffer = Buffer()
-                    dataEntries.forEachIndexed { index, dataEntryBytes ->
                         dataBuffer.writeInt(dataEntryBytes.size)
                         dataBuffer.write(dataEntryBytes)
                         dataBuffer.writeInt(dataEntryBytes.size)
                         dataBuffer.writeLong(positionFirstAppend + index)
-                        val nextAddress = last() + 4L + dataEntryBytes.size + 4L + 8L
-                        add(nextAddress)
-                    }
-                    removeLast() // an extra address is always added, so we remove it before returning the new addresses
+                        appended += 4L + dataEntryBytes.size + 4L + STREAM_ENTRY_SIZE_IN_BYTES
 
-                    dataHandleRw.appendingSink().use { s ->
-                        s.write(dataBuffer, dataBuffer.size)
+                        addr
                     }
                 }
 
                 // write position index buffer
-                val posBuffer = Buffer()
-                dataAddresses.forEach { dataAddress ->
-                    posBuffer.writeLong(dataAddress)
-                }
-                posHandleRw.appendingSink().use { s ->
-                    s.write(posBuffer, posBuffer.size)
+                posHandleRw.appendingSink().buffer().use { posBuffer ->
+                    dataAddresses.forEach { dataAddress ->
+                        posBuffer.writeLong(dataAddress)
+                    }
                 }
 
                 // write stream index
-                val streamBuffer = Buffer()
-                dataAddresses.forEach { walAddress ->
-                    streamBuffer.writeLong(walAddress)
-                }
-                streamHandle.appendingSink().use { s ->
-                    s.write(streamBuffer, streamBuffer.size)
+                streamHandleRw.appendingSink().buffer().use { streamBuffer ->
+                    dataAddresses.forEach { walAddress ->
+                        streamBuffer.writeLong(walAddress)
+                    }
                 }
             }
         }
+    }
+
+    private inline fun <R> useHandles(data: FileHandle, pos: FileHandle, stream: FileHandle, block: (FileHandle, FileHandle, FileHandle) -> R): R {
+        var thrown: Throwable? = null
+
+        val dataSize = data.size()
+        val posSize = pos.size()
+        val streamSize = stream.size()
+        val result = try {
+            block(data, pos, stream)
+        } catch (t: Throwable) {
+            thrown = t
+            // on error, trying to reset all files to the original size before the operation
+            try {
+                data.resize(dataSize)
+                data.flush()
+            } catch (t: Throwable) {
+                thrown.addSuppressed(t)
+            }
+            try {
+                pos.resize(posSize)
+                pos.flush()
+            } catch (t: Throwable) {
+                thrown.addSuppressed(t)
+            }
+            try {
+                stream.resize(streamSize)
+                stream.flush()
+            } catch (t: Throwable) {
+                thrown.addSuppressed(t)
+            }
+            null
+        } finally {
+            try {
+                data.close()
+            } catch (t: Throwable) {
+                if (thrown == null) {
+                    thrown = t
+                } else {
+                    thrown.addSuppressed(t)
+                }
+            }
+            try {
+                pos.close()
+            } catch (t: Throwable) {
+                if (thrown == null) {
+                    thrown = t
+                } else {
+                    thrown.addSuppressed(t)
+                }
+            }
+            try {
+                stream.close()
+            } catch (t: Throwable) {
+                if (thrown == null) {
+                    thrown = t
+                } else {
+                    thrown.addSuppressed(t)
+                }
+            }
+        }
+
+        if (thrown != null) throw thrown
+        @Suppress("UNCHECKED_CAST")
+        return result as R
     }
 
     override fun <E, I, R> useStreamEvents(
