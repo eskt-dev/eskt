@@ -4,7 +4,7 @@ import dev.eskt.store.test.LoadEventTest
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 
-internal class PostgresqlLoadEventTest : LoadEventTest<PostgresqlStorage, PostgresqlEventStore, PostgresqlStreamTestFactory>(
+internal class PostgresqlLoadEventTest : LoadEventTest<PostgresqlJdbcStorage, PostgresqlJdbcEventStore, PostgresqlStreamTestFactory>(
     PostgresqlStreamTestFactory(),
 ) {
     @BeforeTest

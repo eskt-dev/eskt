@@ -1,7 +1,7 @@
 package dev.eskt.example.app
 
 import com.benasher44.uuid.uuidFrom
-import dev.eskt.example.domain.CarProduction
+import dev.eskt.example.domain.usecases.blocking.CarProduction
 import dev.eskt.example.domain.command.CarCommand
 import dev.eskt.example.domain.query.MakeModelCarCountRepository
 import org.springframework.web.bind.annotation.GetMapping

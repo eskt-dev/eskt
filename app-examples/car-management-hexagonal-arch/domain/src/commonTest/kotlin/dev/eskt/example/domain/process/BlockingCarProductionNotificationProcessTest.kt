@@ -1,14 +1,13 @@
-package dev.eskt.example.domain.query
+package dev.eskt.example.domain.process
 
-import dev.eskt.example.domain.process.CarProductionNotificationProcess
-import dev.eskt.example.domain.process.CarProductionNotifier
+import dev.eskt.example.domain.query.car1StreamId
 import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.test.w.car.CarProducedEvent
 import dev.eskt.store.test.w.car.CarStreamType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class CarProductionNotificationProcessTest {
+class BlockingCarProductionNotificationProcessTest {
     @Test
     fun `given no cars - when listening production event - then notifier is called correctly`() {
         // given

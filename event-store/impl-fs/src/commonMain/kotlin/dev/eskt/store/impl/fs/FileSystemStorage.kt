@@ -4,8 +4,8 @@ import dev.eskt.store.api.EventEnvelope
 import dev.eskt.store.api.EventMetadata
 import dev.eskt.store.api.Serializer
 import dev.eskt.store.api.StreamType
-import dev.eskt.store.storage.api.Storage
 import dev.eskt.store.storage.api.StorageVersionMismatchException
+import dev.eskt.store.storage.api.blocking.Storage
 import kotlinx.atomicfu.locks.reentrantLock
 import kotlinx.atomicfu.locks.withLock
 import kotlinx.serialization.ExperimentalSerializationApi

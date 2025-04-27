@@ -33,6 +33,7 @@ dependencies {
 
     // runtime
     runtimeOnly("com.h2database:h2")
+    runtimeOnly("org.postgresql:postgresql")
 
     // test
     testImplementation(kotlin("test"))

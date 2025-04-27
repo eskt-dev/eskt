@@ -1,14 +1,14 @@
-package dev.eskt.example.app
+package dev.eskt.example.app.command
 
 import com.benasher44.uuid.Uuid
 import dev.eskt.example.domain.command.CarWriteHelper
-import dev.eskt.example.domain.command.CarWriteHelperRepository
+import dev.eskt.example.domain.command.CarWriteHelperBlockingRepository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 
 @Repository
-interface CarWriteHelperJpaRepository : JpaRepository<CarWriteHelperEntity, Uuid>, CarWriteHelperRepository {
+interface CarWriteHelperJpaRepository : JpaRepository<CarWriteHelperEntity, Uuid>, CarWriteHelperBlockingRepository {
     fun findByVin(vin: String): CarWriteHelperEntity?
 
     override fun getByUuid(id: Uuid): CarWriteHelper? {
